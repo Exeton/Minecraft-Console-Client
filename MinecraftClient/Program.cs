@@ -185,10 +185,8 @@ namespace MinecraftClient
                 return ProtocolHandler.LoginResult.Success;
             }
 
-
             if (Settings.SessionCaching == CacheType.None || !SessionCache.Contains(Settings.Login.ToLower()))
                 return ProtocolHandler.LoginResult.LoginRequired;
-
 
             session = SessionCache.Get(Settings.Login.ToLower());
             if (ProtocolHandler.GetTokenValidation(session) == ProtocolHandler.LoginResult.Success)

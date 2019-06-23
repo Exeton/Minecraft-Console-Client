@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using MinecraftClient.Mapping;
 using MinecraftClient.Mapping.BlockPalettes;
 using MinecraftClient.Protocol.Handlers.Forge;
+using MinecraftClient.Protocol.Handlers.Protocol18;
 
 namespace MinecraftClient.Protocol.Handlers
 {
@@ -118,10 +119,8 @@ namespace MinecraftClient.Protocol.Handlers
             {
                 while (socketWrapper.HasDataAvailable())
                 {
-                    int packetID = 0;
-                    List<byte> packetData = new List<byte>();
-                    ReadNextPacket(ref packetID, packetData);
-                    HandlePacket(packetID, new List<byte>(packetData));
+                    Packet packet = ReadNextPacket();
+                    HandlePacket(packet);
                 }
             }
             catch (SocketException) { return false; }
@@ -134,27 +133,29 @@ namespace MinecraftClient.Protocol.Handlers
         /// </summary>
         /// <param name="packetID">will contain packet ID</param>
         /// <param name="packetData">will contain raw packet Data</param>
-        internal void ReadNextPacket(ref int packetID, List<byte> packetData)
+        internal Packet ReadNextPacket()
         {
-            packetData.Clear();
+            Packet packet = new Packet();
             int size = dataTypes.ReadNextVarIntRAW(socketWrapper); //Packet size
-            packetData.AddRange(socketWrapper.ReadDataRAW(size)); //Packet contents
+            packet.data.AddRange(socketWrapper.ReadDataRAW(size)); //Packet contents
 
             //Handle packet decompression
             if (protocolversion >= MC18Version
                 && compression_treshold > 0)
             {
-                int sizeUncompressed = dataTypes.ReadNextVarInt(packetData);
+                int sizeUncompressed = dataTypes.ReadNextVarInt(packet.data);
                 if (sizeUncompressed != 0) // != 0 means compressed, let's decompress
                 {
-                    byte[] toDecompress = packetData.ToArray();
+                    byte[] toDecompress = packet.data.ToArray();
                     byte[] uncompressed = ZlibUtils.Decompress(toDecompress, sizeUncompressed);
-                    packetData.Clear();
-                    packetData.AddRange(uncompressed);
+                    packet.data.Clear();
+                    packet.data.AddRange(uncompressed);
                 }
             }
 
-            packetID = dataTypes.ReadNextVarInt(packetData); //Packet ID
+            packet.id = dataTypes.ReadNextVarInt(packet.data); //Packet ID
+
+            return packet;
         }
 
         /// <summary>
@@ -163,8 +164,12 @@ namespace MinecraftClient.Protocol.Handlers
         /// <param name="packetID">Packet ID</param>
         /// <param name="packetData">Packet contents</param>
         /// <returns>TRUE if the packet was processed, FALSE if ignored or unknown</returns>
-        internal bool HandlePacket(int packetID, List<byte> packetData)
+        internal bool HandlePacket(Packet packet)
         {
+
+            int packetID = packet.id;
+            List<byte> packetData = packet.data;
+
             try
             {
                 if (login_phase)
@@ -621,24 +626,22 @@ namespace MinecraftClient.Protocol.Handlers
 
             SendPacket(0x00, login_packet);
 
-            int packetID = -1;
-            List<byte> packetData = new List<byte>();
             while (true)
             {
-                ReadNextPacket(ref packetID, packetData);
-                if (packetID == 0x00) //Login rejected
+                Packet packet = ReadNextPacket();
+                if (packet.id == 0x00) //Login rejected
                 {
-                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packetData)));
+                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
                     return false;
                 }
-                else if (packetID == 0x01) //Encryption request
+                else if (packet.id == 0x01) //Encryption request
                 {
-                    string serverID = dataTypes.ReadNextString(packetData);
-                    byte[] Serverkey = dataTypes.ReadNextByteArray(packetData);
-                    byte[] token = dataTypes.ReadNextByteArray(packetData);
+                    string serverID = dataTypes.ReadNextString(packet.data);
+                    byte[] Serverkey = dataTypes.ReadNextByteArray(packet.data);
+                    byte[] token = dataTypes.ReadNextByteArray(packet.data);
                     return StartEncryption(handler.GetUserUUID(), handler.GetSessionID(), token, serverID, Serverkey);
                 }
-                else if (packetID == 0x02) //Login successful
+                else if (packet.id == 0x02) //Login successful
                 {
                     ConsoleIO.WriteLineFormatted("§8Server is in offline mode.");
                     login_phase = false;
@@ -649,7 +652,7 @@ namespace MinecraftClient.Protocol.Handlers
                     StartUpdating();
                     return true; //No need to check session or start encryption
                 }
-                else HandlePacket(packetID, packetData);
+                else HandlePacket(packet);
             }
         }
 
@@ -686,17 +689,15 @@ namespace MinecraftClient.Protocol.Handlers
             socketWrapper.SwitchToEncrypted(secretKey);
 
             //Process the next packet
-            int packetID = -1;
-            List<byte> packetData = new List<byte>();
             while (true)
             {
-                ReadNextPacket(ref packetID, packetData);
-                if (packetID == 0x00) //Login rejected
+                Packet packet = ReadNextPacket();
+                if (packet.id == 0x00) //Login rejected
                 {
-                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packetData)));
+                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
                     return false;
                 }
-                else if (packetID == 0x02) //Login successful
+                else if (packet.id == 0x02) //Login successful
                 {
                     login_phase = false;
 
@@ -706,7 +707,7 @@ namespace MinecraftClient.Protocol.Handlers
                     StartUpdating();
                     return true;
                 }
-                else HandlePacket(packetID, packetData);
+                else HandlePacket(packet);
             }
         }
 

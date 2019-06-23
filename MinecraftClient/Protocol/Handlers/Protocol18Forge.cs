@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using MinecraftClient.Protocol.Handlers.Forge;
 using System.Threading;
+using MinecraftClient.Protocol.Handlers.Protocol18;
 
 namespace MinecraftClient.Protocol.Handlers
 {
@@ -56,22 +57,19 @@ namespace MinecraftClient.Protocol.Handlers
         {
             if (ForgeEnabled())
             {
-                int packetID = -1;
-                List<byte> packetData = new List<byte>();
-
                 while (fmlHandshakeState != FMLHandshakeClientState.DONE)
                 {
-                    protocol18.ReadNextPacket(ref packetID, packetData);
+                    Packet packet = protocol18.ReadNextPacket();
 
-                    if (packetID == 0x40) // Disconnect
+                    if (packet.id == 0x40) // Disconnect
                     {
-                        mcHandler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packetData)));
+                        mcHandler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
                         return false;
                     }
                     else
                     {
                         // Send back regular packet to the vanilla protocol handler
-                        protocol18.HandlePacket(packetID, packetData);
+                        protocol18.HandlePacket(packet);
                     }
                 }
             }
