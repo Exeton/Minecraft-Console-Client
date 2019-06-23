@@ -111,6 +111,7 @@
     <Compile Include="Protocol\Handlers\Protocol18Terrain.cs" />
     <Compile Include="Protocol\Handlers\SocketWrapper.cs" />
     <Compile Include="Protocol\Session\SessionFileMonitor.cs" />
+    <Compile Include="View\ServerConnectionInfo.cs" />
     <Compile Include="WinAPI\ConsoleIcon.cs" />
     <Compile Include="ConsoleIO.cs" />
     <Compile Include="Crypto\Streams\BouncyAes\AesFastEngine.cs" />

@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using MinecraftClient.Protocol.Session;
 using MinecraftClient.Protocol;
+using MinecraftClient.View;
 
 namespace MinecraftClient
 {
@@ -25,9 +26,8 @@ namespace MinecraftClient
         public static string Login = "";
         public static string Username = "";
         public static string Password = "";
-        public static string ServerIP = "";
-        public static ushort ServerPort = 25565;
-        public static string ServerVersion = "";
+
+        public static ServerConnectionInfo ServerConnectionInfo = new ServerConnectionInfo();
         public static string SingleCommand = "";
         public static string ConsoleTitle = "";
 
@@ -218,7 +218,7 @@ namespace MinecraftClient
                                                 case "exitonfailure": interactiveMode = !str2bool(argValue); break;
                                                 case "playerheadicon": playerHeadAsIcon = str2bool(argValue); break;
                                                 case "chatbotlogfile": chatbotLogFile = argValue; break;
-                                                case "mcversion": ServerVersion = argValue; break;
+                                                case "mcversion": ServerConnectionInfo.ServerVersion = argValue; break;
                                                 case "splitmessagedelay": splitMessageDelay = TimeSpan.FromSeconds(str2int(argValue)); break;
                                                 case "scriptcache": CacheScripts = str2bool(argValue); break;
                                                 case "showsystemmessages": DisplaySystemMessages = str2bool(argValue); break;
@@ -276,8 +276,8 @@ namespace MinecraftClient
                                                     if (File.Exists(argValue))
                                                     {
                                                         //Backup current server info
-                                                        string server_host_temp = ServerIP;
-                                                        ushort server_port_temp = ServerPort;
+                                                        string server_host_temp = ServerConnectionInfo.ServerIP;
+                                                        ushort server_port_temp = ServerConnectionInfo.ServerPort;
 
                                                         foreach (string server_line in File.ReadAllLines(argValue))
                                                         {
@@ -289,12 +289,12 @@ namespace MinecraftClient
                                                                 && !server_data[0].Contains('.')
                                                                 && SetServerIP(server_data[1]))
                                                                 Servers[server_data[0]]
-                                                                    = new KeyValuePair<string, ushort>(ServerIP, ServerPort);
+                                                                    = new KeyValuePair<string, ushort>(ServerConnectionInfo.ServerIP, ServerConnectionInfo.ServerPort);
                                                         }
 
                                                         //Restore current server info
-                                                        ServerIP = server_host_temp;
-                                                        ServerPort = server_port_temp;
+                                                        ServerConnectionInfo.ServerIP = server_host_temp;
+                                                        ServerConnectionInfo.ServerPort = server_port_temp;
 
                                                         //Try server value against aliases after load
                                                         SetServerIP(serverAlias);
@@ -700,15 +700,15 @@ namespace MinecraftClient
                 if (sip.Length == 1 && host.Contains('.') && host.Any(c => char.IsLetter(c)) && ResolveSrvRecords)
                     //Domain name without port may need Minecraft SRV Record lookup
                     ProtocolHandler.MinecraftServiceLookup(ref host, ref port);
-                ServerIP = host;
-                ServerPort = port;
+                ServerConnectionInfo.ServerIP = host;
+                ServerConnectionInfo.ServerPort = port;
                 return true;
             }
             else if (Servers.ContainsKey(server))
             {
                 //Server Alias (if no dot then treat the server as an alias)
-                ServerIP = Servers[server].Key;
-                ServerPort = Servers[server].Value;
+                ServerConnectionInfo.ServerIP = Servers[server].Key;
+                ServerConnectionInfo.ServerPort = Servers[server].Value;
                 return true;
             }
 
@@ -782,8 +782,8 @@ namespace MinecraftClient
                         switch (varname_lower)
                         {
                             case "username": result.Append(Username); break;
-                            case "serverip": result.Append(ServerIP); break;
-                            case "serverport": result.Append(ServerPort); break;
+                            case "serverip": result.Append(ServerConnectionInfo.ServerIP); break;
+                            case "serverport": result.Append(ServerConnectionInfo.ServerPort); break;
                             default:
                                 if (AppVars.ContainsKey(varname_lower))
                                 {
