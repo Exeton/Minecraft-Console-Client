@@ -16,6 +16,7 @@ namespace MinecraftClient.Protocol.Handlers
         private int protocolversion;
         private DataTypes dataTypes;
         private Protocol18Handler protocol18;
+        public IPacketReadWriter packetReadWriter;
         private IMinecraftComHandler mcHandler;
 
         private ForgeInfo forgeInfo;
@@ -35,6 +36,7 @@ namespace MinecraftClient.Protocol.Handlers
             this.dataTypes = dataTypes;
             this.protocol18 = protocol18;
             this.mcHandler = mcHandler;
+            this.packetReadWriter = packetReadWriter;
         }
 
         /// <summary>
@@ -59,7 +61,7 @@ namespace MinecraftClient.Protocol.Handlers
             {
                 while (fmlHandshakeState != FMLHandshakeClientState.DONE)
                 {
-                    Packet packet = protocol18.ReadNextPacket();
+                    Packet packet = packetReadWriter.ReadNext();
 
                     if (packet.id == 0x40) // Disconnect
                     {

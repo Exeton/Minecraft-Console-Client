@@ -122,6 +122,7 @@
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\All\KickHandler.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\MapChunkBulkHandler.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\MultiBlockChangeHandler.cs" />
+    <Compile Include="Protocol\Handlers\Protocol18\IPacketReadWriter.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\MultiVersionHandler.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\NetworkCompressionThresholdHandler.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\All\OpenWindowHandler.cs" />
@@ -135,11 +136,10 @@
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\UnloadChunkHandler.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\All\WindowItemsHandler.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\IPacketHandler.cs" />
-    <Compile Include="Protocol\Handlers\Protocol18\IPacketSender.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Packet.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\PacketData\BlockChangedPacketData.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Protocol18PacketHandler.cs" />
-    <Compile Include="Protocol\Handlers\Protocol18\Protocol18PacketSender.cs" />
+    <Compile Include="Protocol\Handlers\Protocol18\Protocol18PacketReadWriter.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\WorldInfo.cs" />
     <Compile Include="Protocol\Handlers\SocketWrapper.cs" />
     <Compile Include="Protocol\Session\SessionFileMonitor.cs" />

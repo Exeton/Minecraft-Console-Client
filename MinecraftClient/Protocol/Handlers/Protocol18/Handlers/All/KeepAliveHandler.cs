@@ -7,15 +7,15 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class KeepAliveHandler : IPacketHandler
     {
-        IPacketSender packetSender;
-        public KeepAliveHandler(IPacketSender packetSender)
+        IPacketReadWriter packetSender;
+        public KeepAliveHandler(IPacketReadWriter packetSender)
         {
             this.packetSender = packetSender;
         }
 
         public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
         {
-            packetSender.SendPacket(PacketOutgoingType.KeepAlive, data);
+            packetSender.WritePacket(PacketOutgoingType.KeepAlive, data);
             return true;
         }
     }

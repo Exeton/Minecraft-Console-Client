@@ -10,10 +10,10 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
     {
 
         DataTypes dataTypes;
-        IPacketSender packetSender;
+        IPacketReadWriter packetSender;
         IMinecraftComHandler handler;
         int protocolversion;
-        public PlayerPositionAndLookHandler(IPacketSender packetSender, DataTypes dataTypes, IMinecraftComHandler handler, int protocolversion)
+        public PlayerPositionAndLookHandler(IPacketReadWriter packetSender, DataTypes dataTypes, IMinecraftComHandler handler, int protocolversion)
         {
             this.dataTypes = dataTypes;
             this.packetSender = packetSender;
@@ -47,7 +47,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
             {
                 int teleportID = dataTypes.ReadNextVarInt(data);
                 // Teleport confirm packet
-                packetSender.SendPacket(PacketOutgoingType.TeleportConfirm, dataTypes.GetVarInt(teleportID));
+                packetSender.WritePacket(PacketOutgoingType.TeleportConfirm, dataTypes.GetVarInt(teleportID));
             }
             return true;
         }

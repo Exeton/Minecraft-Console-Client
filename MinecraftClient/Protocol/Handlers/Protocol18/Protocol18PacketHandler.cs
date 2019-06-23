@@ -14,7 +14,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18
     {
         int protocolversion;
         Dictionary<PacketIncomingType, IPacketHandler> packetHandlers = new Dictionary<PacketIncomingType, IPacketHandler>();
-        public Protocol18PacketHandler(int protocolVersion, DataTypes dataTypes, IMinecraftComHandler handler, IPacketSender packetSender, Protocol18Terrain pTerrain, Protocol18Forge pForge, WorldInfo worldInfo, Protocol18Handler protocol18Handler)
+        public Protocol18PacketHandler(int protocolVersion, DataTypes dataTypes, IMinecraftComHandler handler, IPacketReadWriter packetSender, Protocol18Terrain pTerrain, Protocol18Forge pForge, WorldInfo worldInfo, Protocol18Handler protocol18Handler)
         {
             this.protocolversion = protocolVersion;
 

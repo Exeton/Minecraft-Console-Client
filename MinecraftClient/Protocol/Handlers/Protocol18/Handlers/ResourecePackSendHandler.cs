@@ -10,9 +10,9 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 
         int protocolversion;
         DataTypes dataTypes;
-        IPacketSender packetSender;
+        IPacketReadWriter packetSender;
 
-        public ResourecePackSendHandler(DataTypes dataTypes, IPacketSender packetSender, int protocolversion)
+        public ResourecePackSendHandler(DataTypes dataTypes, IPacketReadWriter packetSender, int protocolversion)
         {
             this.dataTypes = dataTypes;
             this.packetSender = packetSender;
@@ -27,8 +27,8 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
             byte[] responseHeader = new byte[0];
             if (protocolversion < (int)McVersion.V110) //MC 1.10 does not include resource pack hash in responses
                 responseHeader = dataTypes.ConcatBytes(dataTypes.GetVarInt(hash.Length), Encoding.UTF8.GetBytes(hash));
-            packetSender.SendPacket(PacketOutgoingType.ResourcePackStatus, dataTypes.ConcatBytes(responseHeader, dataTypes.GetVarInt(3))); //Accepted pack
-            packetSender.SendPacket(PacketOutgoingType.ResourcePackStatus, dataTypes.ConcatBytes(responseHeader, dataTypes.GetVarInt(0))); //Successfully loaded
+            packetSender.WritePacket(PacketOutgoingType.ResourcePackStatus, dataTypes.ConcatBytes(responseHeader, dataTypes.GetVarInt(3))); //Accepted pack
+            packetSender.WritePacket(PacketOutgoingType.ResourcePackStatus, dataTypes.ConcatBytes(responseHeader, dataTypes.GetVarInt(0))); //Successfully loaded
             return true;
         }
     }
