@@ -185,25 +185,29 @@ namespace MinecraftClient
                 return ProtocolHandler.LoginResult.Success;
             }
 
-            if (Settings.SessionCaching != CacheType.None && SessionCache.Contains(Settings.Login.ToLower()))
-            {
-                session = SessionCache.Get(Settings.Login.ToLower());
-                if (ProtocolHandler.GetTokenValidation(session) == ProtocolHandler.LoginResult.Success)
-                    ConsoleIO.WriteLineFormatted("§8Cached session is still valid for " + session.PlayerName + '.');
-                else
-                {
-                    ConsoleIO.WriteLineFormatted("§8Cached session is invalid or expired.");
-                    if (Settings.Password == "")
-                        RequestPassword();
 
-                    Console.WriteLine("Connecting to Minecraft.net...");
-                    if (ProtocolHandler.GetLogin(Settings.Login, Settings.Password, out session) == ProtocolHandler.LoginResult.Success && Settings.SessionCaching != CacheType.None)
-                    {
-                        SessionCache.Store(Settings.Login.ToLower(), session);
-                        return ProtocolHandler.LoginResult.Success;
-                    }
-                }
+            if (Settings.SessionCaching == CacheType.None || !SessionCache.Contains(Settings.Login.ToLower()))
+                return ProtocolHandler.LoginResult.LoginRequired;
+
+
+            session = SessionCache.Get(Settings.Login.ToLower());
+            if (ProtocolHandler.GetTokenValidation(session) == ProtocolHandler.LoginResult.Success)
+            {
+                ConsoleIO.WriteLineFormatted("§8Cached session is still valid for " + session.PlayerName + '.');
+                return ProtocolHandler.LoginResult.Success;
             }
+
+            ConsoleIO.WriteLineFormatted("§8Cached session is invalid or expired.");
+            if (Settings.Password == "")
+                RequestPassword();
+
+            Console.WriteLine("Connecting to Minecraft.net...");
+            if (ProtocolHandler.GetLogin(Settings.Login, Settings.Password, out session) == ProtocolHandler.LoginResult.Success && Settings.SessionCaching != CacheType.None)
+            {
+                SessionCache.Store(Settings.Login.ToLower(), session);
+                return ProtocolHandler.LoginResult.Success;
+            }
+            
             return ProtocolHandler.LoginResult.LoginRequired;
         }
         static void handleLoginSuccess(SessionToken session)
