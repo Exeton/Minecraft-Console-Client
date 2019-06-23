@@ -20,8 +20,6 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
             packetHandlerInfos.Add(new PacketHandlerInfo(packetHandler, minimumVersion));
             return this;
         }
-
-
         public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
         {
             //Use better algorthim for getting the packet handler.
@@ -38,9 +36,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
                 }
             }
 
-
             return closestPacketHandler.packetHandler.HandlePacket(packetType, data);
-
         }
     }
 }

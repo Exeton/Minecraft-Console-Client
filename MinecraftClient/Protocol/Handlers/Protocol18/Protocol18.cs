@@ -25,19 +25,7 @@ namespace MinecraftClient.Protocol.Handlers
     /// </remarks>
     class Protocol18Handler : IMinecraftCom
     {
-        internal const int MC18Version = 47;
-        internal const int MC19Version = 107;
-        internal const int MC191Version = 108;
-        internal const int MC110Version = 210;
-        internal const int MC1112Version = 316;
-        internal const int MC112Version = 335;
-        internal const int MC1121Version = 338;
-        internal const int MC1122Version = 340;
-        internal const int MC113Version = 393;
-        internal const int MC114Version = 477;
-        internal const int MC1142Version = 485;
 
-        public int compression_treshold = 0;
         public bool autocomplete_received = false;
         public int autocomplete_transaction_id = 0;
         public readonly List<string> autocomplete_result = new List<string>();
@@ -48,7 +36,7 @@ namespace MinecraftClient.Protocol.Handlers
         Protocol18Forge pForge;
         Protocol18Terrain pTerrain;
         IMinecraftComHandler handler;
-        SocketWrapper socketWrapper;
+        public ConnectionInfo connectionInfo;
         DataTypes dataTypes;
         Thread netRead;
 
@@ -59,36 +47,37 @@ namespace MinecraftClient.Protocol.Handlers
         {
             ConsoleIO.SetAutoCompleteEngine(this);
             ChatParser.InitTranslations();
-            this.socketWrapper = new SocketWrapper(Client);
+
+            connectionInfo = new ConnectionInfo(new SocketWrapper(Client), 0);
             this.dataTypes = new DataTypes(protocolVersion);
             this.protocolversion = protocolVersion;
             this.handler = handler;
             this.pForge = new Protocol18Forge(forgeInfo, protocolVersion, dataTypes, this, handler);
             this.pTerrain = new Protocol18Terrain(protocolVersion, dataTypes, handler);
 
-            if (handler.GetTerrainEnabled() && protocolversion > MC1142Version)
+            if (handler.GetTerrainEnabled() && protocolversion > (int)McVersion.V1142)
             {
                 ConsoleIO.WriteLineFormatted("§8Terrain & Movements currently not handled for that MC version.");
                 handler.SetTerrainEnabled(false);
             }
 
-            if (handler.GetInventoryEnabled() && protocolversion > MC114Version)
+            if (handler.GetInventoryEnabled() && protocolversion > (int)McVersion.V114)
             {
                 ConsoleIO.WriteLineFormatted("§8Inventories are currently not handled for that MC version.");
                 handler.SetInventoryEnabled(false);
             }
 
-            if (protocolversion >= MC113Version)
+            if (protocolversion >= (int)McVersion.V18)
             {
-                if (protocolVersion > MC1142Version && handler.GetTerrainEnabled())
+                if (protocolVersion > (int)McVersion.V1142 && handler.GetTerrainEnabled())
                     throw new NotImplementedException("Please update block types handling for this Minecraft version. See Material.cs");
-                if (protocolVersion >= MC114Version)
+                if (protocolVersion >= (int)McVersion.V114)
                     Block.Palette = new Palette114();
                 else Block.Palette = new Palette113();
             }
             else Block.Palette = new Palette112();
 
-            packetSender = new Protocol18PacketSender(this);
+            packetSender = new Protocol18PacketSender(dataTypes, connectionInfo, protocolVersion);
             packetHandler = new Protocol18PacketHandler(protocolVersion, dataTypes, handler, packetSender, pTerrain, pForge, worldInfo, this);
 
         }
@@ -120,11 +109,11 @@ namespace MinecraftClient.Protocol.Handlers
         private bool Update()
         {
             handler.OnUpdate();
-            if (!socketWrapper.IsConnected())
+            if (!connectionInfo.socketWrapper.IsConnected())
                 return false;
             try
             {
-                while (socketWrapper.HasDataAvailable())
+                while (connectionInfo.socketWrapper.HasDataAvailable())
                 {
                     Packet packet = ReadNextPacket();
                     HandlePacket(packet);
@@ -143,12 +132,11 @@ namespace MinecraftClient.Protocol.Handlers
         internal Packet ReadNextPacket()
         {
             Packet packet = new Packet();
-            int size = dataTypes.ReadNextVarIntRAW(socketWrapper);
-            packet.data.AddRange(socketWrapper.ReadDataRAW(size));
+            int size = dataTypes.ReadNextVarIntRAW(connectionInfo.socketWrapper);
+            packet.data.AddRange(connectionInfo.socketWrapper.ReadDataRAW(size));
 
             //Handle packet decompression
-            if (protocolversion >= MC18Version
-                && compression_treshold > 0)
+            if (protocolversion >= (int)McVersion.V18 && connectionInfo.compressionThreshold > 0)
             {
                 int sizeUncompressed = dataTypes.ReadNextVarInt(packet.data);
                 if (sizeUncompressed != 0) // != 0 means compressed, let's decompress
@@ -183,8 +171,8 @@ namespace MinecraftClient.Protocol.Handlers
                     switch (packetID) //Packet IDs are different while logging in
                     {
                         case 0x03:
-                            if (protocolversion >= MC18Version)
-                                compression_treshold = dataTypes.ReadNextVarInt(packetData);
+                            if (protocolversion >= (int)McVersion.V18)
+                                connectionInfo.compressionThreshold = dataTypes.ReadNextVarInt(packetData);
                             break;
                         default:
                             return false; //Ignored packet
@@ -225,48 +213,12 @@ namespace MinecraftClient.Protocol.Handlers
                 if (netRead != null)
                 {
                     netRead.Abort();
-                    socketWrapper.Disconnect();
+                    connectionInfo.socketWrapper.Disconnect();
                 }
             }
             catch { }
         }
 
-        /// <summary>
-        /// Send a packet to the server.  Packet ID, compression, and encryption will be handled automatically.
-        /// </summary>
-        /// <param name="packet">packet type</param>
-        /// <param name="packetData">packet Data</param>
-        public void SendPacket(PacketOutgoingType packet, IEnumerable<byte> packetData)
-        {
-            SendPacket(Protocol18PacketTypes.GetPacketOutgoingID(packet, protocolversion), packetData);
-        }
-
-        /// <summary>
-        /// Send a packet to the server.  Compression and encryption will be handled automatically.
-        /// </summary>
-        /// <param name="packetID">packet ID</param>
-        /// <param name="packetData">packet Data</param>
-        public void SendPacket(int packetID, IEnumerable<byte> packetData)
-        {
-            //The inner packet
-            byte[] the_packet = dataTypes.ConcatBytes(dataTypes.GetVarInt(packetID), packetData.ToArray());
-
-            if (compression_treshold > 0) //Compression enabled?
-            {
-                if (the_packet.Length >= compression_treshold) //Packet long enough for compressing?
-                {
-                    byte[] compressed_packet = ZlibUtils.Compress(the_packet);
-                    the_packet = dataTypes.ConcatBytes(dataTypes.GetVarInt(the_packet.Length), compressed_packet);
-                }
-                else
-                {
-                    byte[] uncompressed_length = dataTypes.GetVarInt(0); //Not compressed (short packet)
-                    the_packet = dataTypes.ConcatBytes(uncompressed_length, the_packet);
-                }
-            }
-
-            socketWrapper.SendDataRAW(dataTypes.ConcatBytes(dataTypes.GetVarInt(the_packet.Length), the_packet));
-        }
 
         /// <summary>
         /// Do the Minecraft login.
@@ -280,11 +232,11 @@ namespace MinecraftClient.Protocol.Handlers
             byte[] next_state = dataTypes.GetVarInt(2);
             byte[] handshake_packet = dataTypes.ConcatBytes(protocol_version, dataTypes.GetString(server_address), server_port, next_state);
 
-            SendPacket(0x00, handshake_packet);
+            packetSender.SendPacket(0x00, handshake_packet);
 
             byte[] login_packet = dataTypes.GetString(handler.GetUsername());
 
-            SendPacket(0x00, login_packet);
+            packetSender.SendPacket(0x00, login_packet);
 
             while (true)
             {
@@ -343,10 +295,10 @@ namespace MinecraftClient.Protocol.Handlers
             byte[] token_enc = dataTypes.GetArray(RSAService.Encrypt(token, false));
 
             //Encryption Response packet
-            SendPacket(0x01, dataTypes.ConcatBytes(key_enc, token_enc));
+            packetSender.SendPacket(0x01, dataTypes.ConcatBytes(key_enc, token_enc));
 
             //Start client-side encryption
-            socketWrapper.SwitchToEncrypted(secretKey);
+            connectionInfo.socketWrapper.SwitchToEncrypted(secretKey);
 
             //Process the next packet
             while (true)
@@ -377,7 +329,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>Max length, in characters</returns>
         public int GetMaxChatMessageLength()
         {
-            return protocolversion > MC110Version
+            return protocolversion > (int)McVersion.V110
                 ? 256
                 : 100;
         }
@@ -394,7 +346,7 @@ namespace MinecraftClient.Protocol.Handlers
             try
             {
                 byte[] message_packet = dataTypes.GetString(message);
-                SendPacket(PacketOutgoingType.ChatMessage, message_packet);
+                packetSender.SendPacket(PacketOutgoingType.ChatMessage, message_packet);
                 return true;
             }
             catch (SocketException) { return false; }
@@ -409,7 +361,7 @@ namespace MinecraftClient.Protocol.Handlers
         {
             try
             {
-                SendPacket(PacketOutgoingType.ClientStatus, new byte[] { 0 });
+                packetSender.SendPacket(PacketOutgoingType.ClientStatus, new byte[] { 0 });
                 return true;
             }
             catch (SocketException) { return false; }
@@ -426,7 +378,7 @@ namespace MinecraftClient.Protocol.Handlers
                 return false;
             // Plugin channels were significantly changed between Minecraft 1.12 and 1.13
             // https://wiki.vg/index.php?title=Pre-release_protocol&oldid=14132#Plugin_Channels
-            if (protocolversion >= MC113Version)
+            if (protocolversion >= (int)McVersion.V113)
             {
                 return SendPluginChannelPacket("minecraft:brand", dataTypes.GetString(brandInfo));
             }
@@ -454,19 +406,19 @@ namespace MinecraftClient.Protocol.Handlers
                 List<byte> fields = new List<byte>();
                 fields.AddRange(dataTypes.GetString(language));
                 fields.Add(viewDistance);
-                fields.AddRange(protocolversion >= MC19Version
+                fields.AddRange(protocolversion >= (int)McVersion.V19
                     ? dataTypes.GetVarInt(chatMode)
                     : new byte[] { chatMode });
                 fields.Add(chatColors ? (byte)1 : (byte)0);
-                if (protocolversion < MC18Version)
+                if (protocolversion < (int)McVersion.V18)
                 {
                     fields.Add(difficulty);
                     fields.Add((byte)(skinParts & 0x1)); //show cape
                 }
                 else fields.Add(skinParts);
-                if (protocolversion >= MC19Version)
+                if (protocolversion >= (int)McVersion.V19)
                     fields.AddRange(dataTypes.GetVarInt(mainHand));
-                SendPacket(PacketOutgoingType.ClientSettings, fields);
+                packetSender.SendPacket(PacketOutgoingType.ClientSettings, fields);
             }
             catch (SocketException) { }
             return false;
@@ -495,10 +447,10 @@ namespace MinecraftClient.Protocol.Handlers
 
                 try
                 {
-                    SendPacket(packetType, dataTypes.ConcatBytes(
+                    packetSender.SendPacket(packetType, dataTypes.ConcatBytes(
                         dataTypes.GetDouble(location.X),
                         dataTypes.GetDouble(location.Y),
-                        protocolversion < MC18Version
+                        protocolversion < (int)McVersion.V18
                             ? dataTypes.GetDouble(location.Y + 1.62)
                             : new byte[0],
                         dataTypes.GetDouble(location.Z),
@@ -522,16 +474,16 @@ namespace MinecraftClient.Protocol.Handlers
             {
                 // In 1.7, length needs to be included.
                 // In 1.8, it must not be.
-                if (protocolversion < MC18Version)
+                if (protocolversion < (int)McVersion.V18)
                 {
                     byte[] length = BitConverter.GetBytes((short)data.Length);
                     Array.Reverse(length);
 
-                    SendPacket(PacketOutgoingType.PluginMessage, dataTypes.ConcatBytes(dataTypes.GetString(channel), length, data));
+                    packetSender.SendPacket(PacketOutgoingType.PluginMessage, dataTypes.ConcatBytes(dataTypes.GetString(channel), length, data));
                 }
                 else
                 {
-                    SendPacket(PacketOutgoingType.PluginMessage, dataTypes.ConcatBytes(dataTypes.GetString(channel), data));
+                    packetSender.SendPacket(PacketOutgoingType.PluginMessage, dataTypes.ConcatBytes(dataTypes.GetString(channel), data));
                 }
 
                 return true;
@@ -545,7 +497,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// </summary>
         public void Disconnect()
         {
-            socketWrapper.Disconnect();
+            connectionInfo.socketWrapper.Disconnect();
         }
 
         /// <summary>
@@ -564,9 +516,9 @@ namespace MinecraftClient.Protocol.Handlers
 
             byte[] tabcomplete_packet = new byte[] { };
 
-            if (protocolversion >= MC18Version)
+            if (protocolversion >= (int)McVersion.V18)
             {
-                if (protocolversion >= MC113Version)
+                if (protocolversion >= (int)McVersion.V113)
                 {
                     tabcomplete_packet = dataTypes.ConcatBytes(tabcomplete_packet, transaction_id);
                     tabcomplete_packet = dataTypes.ConcatBytes(tabcomplete_packet, dataTypes.GetString(BehindCursor));
@@ -575,7 +527,7 @@ namespace MinecraftClient.Protocol.Handlers
                 {
                     tabcomplete_packet = dataTypes.ConcatBytes(tabcomplete_packet, dataTypes.GetString(BehindCursor));
 
-                    if (protocolversion >= MC19Version)
+                    if (protocolversion >= (int)McVersion.V19)
                     {
                         tabcomplete_packet = dataTypes.ConcatBytes(tabcomplete_packet, assume_command);
                     }
@@ -591,7 +543,7 @@ namespace MinecraftClient.Protocol.Handlers
             autocomplete_received = false;
             autocomplete_result.Clear();
             autocomplete_result.Add(BehindCursor);
-            SendPacket(PacketOutgoingType.TabComplete, tabcomplete_packet);
+            packetSender.SendPacket(PacketOutgoingType.TabComplete, tabcomplete_packet);
 
             int wait_left = 50; //do not wait more than 5 seconds (50 * 100 ms)
             while (wait_left > 0 && !autocomplete_received) { System.Threading.Thread.Sleep(100); wait_left--; }
@@ -610,7 +562,7 @@ namespace MinecraftClient.Protocol.Handlers
             TcpClient tcp = ProxyHandler.newTcpClient(host, port);
             tcp.ReceiveBufferSize = 1024 * 1024;
             SocketWrapper socketWrapper = new SocketWrapper(tcp);
-            DataTypes dataTypes = new DataTypes(MC18Version);
+            DataTypes dataTypes = new DataTypes((int)McVersion.V18);
 
             byte[] packet_id = dataTypes.GetVarInt(0);
             byte[] protocol_version = dataTypes.GetVarInt(-1);

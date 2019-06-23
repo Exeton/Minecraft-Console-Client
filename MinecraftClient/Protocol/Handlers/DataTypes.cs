@@ -127,7 +127,7 @@ namespace MinecraftClient.Protocol.Handlers
         {
             ulong locEncoded = ReadNextULong(cache);
             int x, y, z;
-            if (protocolversion >= Protocol18Handler.MC114Version)
+            if (protocolversion >= (int)McVersion.V114)
             {
                 x = (int)(locEncoded >> 38);
                 y = (int)(locEncoded & 0xFFF);
@@ -200,7 +200,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>The byte array</returns>
         public byte[] ReadNextByteArray(List<byte> cache)
         {
-            int len = protocolversion >= Protocol18Handler.MC18Version
+            int len = protocolversion >= (int)McVersion.V18
                 ? ReadNextVarInt(cache)
                 : ReadNextShort(cache);
             return ReadData(len, cache);
@@ -441,7 +441,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>Array ready to send</returns>
         public byte[] GetArray(byte[] array)
         {
-            if (protocolversion < Protocol18Handler.MC18Version)
+            if (protocolversion < (int)McVersion.V18)
             {
                 byte[] length = BitConverter.GetBytes((short)array.Length);
                 Array.Reverse(length);
@@ -474,7 +474,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>Location representation as ulong</returns>
         public byte[] GetLocation(Location location)
         {
-            if (protocolversion >= Protocol18Handler.MC114Version)
+            if (protocolversion >= (int)McVersion.V114)
             {
                 return BitConverter.GetBytes(((((ulong)location.X) & 0x3FFFFFF) << 38) | ((((ulong)location.Z) & 0x3FFFFFF) << 12) | (((ulong)location.Y) & 0xFFF));
             }

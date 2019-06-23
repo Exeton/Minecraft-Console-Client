@@ -21,7 +21,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
             if (protocolversion >= (int)McVersion.V18 && protocolversion < (int)McVersion.V19)
-                Protocol18Handler.compression_treshold = dataTypes.ReadNextVarInt(packetData);
+                Protocol18Handler.connectionInfo.compressionThreshold = dataTypes.ReadNextVarInt(packetData);
             return true;
         }
     }

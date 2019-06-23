@@ -177,7 +177,7 @@ namespace MinecraftClient.Protocol.Handlers
                             if (discriminator != FMLHandshakeDiscriminator.RegistryData)
                                 return false;
 
-                            if (protocolversion < Protocol18Handler.MC18Version)
+                            if (protocolversion < (int)McVersion.V18)
                             {
                                 // 1.7.10 and below have one registry
                                 // with blocks and items.

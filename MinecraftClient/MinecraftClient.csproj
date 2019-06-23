@@ -111,6 +111,7 @@
     <Compile Include="Protocol\Handlers\Protocol18Forge.cs" />
     <Compile Include="Protocol\Handlers\Protocol18PacketTypes.cs" />
     <Compile Include="Protocol\Handlers\Protocol18Terrain.cs" />
+    <Compile Include="Protocol\Handlers\Protocol18\ConnectionInfo.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\17Plus\BlockChangeHandler17.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\18\BlockChangeHandler18.cs" />
     <Compile Include="Protocol\Handlers\Protocol18\Handlers\All\ChatMessageHandler.cs" />

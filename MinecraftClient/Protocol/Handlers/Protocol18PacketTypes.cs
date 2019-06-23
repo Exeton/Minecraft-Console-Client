@@ -18,7 +18,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>Abstract numbering</returns>
         public static PacketIncomingType GetPacketIncomingType(int packetID, int protocol)
         {
-            if (protocol <= Protocol18Handler.MC18Version) // MC 1.7 and 1.8
+            if (protocol <= (int)McVersion.V18) // MC 1.7 and 1.8
             {
                 switch (packetID)
                 {
@@ -45,7 +45,7 @@ namespace MinecraftClient.Protocol.Handlers
                     default: return PacketIncomingType.UnknownPacket;
                 }
             }
-            else if (protocol <= Protocol18Handler.MC1112Version) // MC 1.9, 1.10 and 1.11
+            else if (protocol <= (int)McVersion.V1112) // MC 1.9, 1.10 and 1.11
             {
                 switch (packetID)
                 {
@@ -72,7 +72,7 @@ namespace MinecraftClient.Protocol.Handlers
                     default: return PacketIncomingType.UnknownPacket;
                 }
             }
-            else if (protocol <= Protocol18Handler.MC112Version) // MC 1.12.0
+            else if (protocol <= (int)McVersion.V112) // MC 1.12.0
             {
                 switch (packetID)
                 {
@@ -97,7 +97,7 @@ namespace MinecraftClient.Protocol.Handlers
                     default: return PacketIncomingType.UnknownPacket;
                 }
             }
-            else if (protocol <= Protocol18Handler.MC1122Version) // MC 1.12.2
+            else if (protocol <= (int)McVersion.V1122) // MC 1.12.2
             {
                 switch (packetID)
                 {
@@ -122,7 +122,7 @@ namespace MinecraftClient.Protocol.Handlers
                     default: return PacketIncomingType.UnknownPacket;
                 }
             }
-            else if (protocol < Protocol18Handler.MC114Version) // MC 1.13 to 1.13.2
+            else if (protocol < (int)McVersion.V114) // MC 1.13 to 1.13.2
             {
                 switch (packetID)
                 {
@@ -182,7 +182,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>Packet ID</returns>
         public static int GetPacketOutgoingID(PacketOutgoingType packet, int protocol)
         {
-            if (protocol <= Protocol18Handler.MC18Version) // MC 1.7 and 1.8
+            if (protocol <= (int)McVersion.V18) // MC 1.7 and 1.8
             {
                 switch (packet)
                 {
@@ -198,7 +198,7 @@ namespace MinecraftClient.Protocol.Handlers
                     case PacketOutgoingType.TeleportConfirm: throw new InvalidOperationException("Teleport confirm is not supported in protocol " + protocol);
                 }
             }
-            else if (protocol <= Protocol18Handler.MC1112Version) // MC 1.9, 1,10 and 1.11
+            else if (protocol <= (int)McVersion.V1112) // MC 1.9, 1,10 and 1.11
             {
                 switch (packet)
                 {
@@ -214,7 +214,7 @@ namespace MinecraftClient.Protocol.Handlers
                     case PacketOutgoingType.TeleportConfirm: return 0x00;
                 }
             }
-            else if (protocol <= Protocol18Handler.MC112Version) // MC 1.12
+            else if (protocol <= (int)McVersion.V112) // MC 1.12
             {
                 switch (packet)
                 {
@@ -230,7 +230,7 @@ namespace MinecraftClient.Protocol.Handlers
                     case PacketOutgoingType.TeleportConfirm: return 0x00;
                 }
             }
-            else if (protocol <= Protocol18Handler.MC1122Version) // 1.12.2
+            else if (protocol <= (int)McVersion.V1122) // 1.12.2
             {
                 switch (packet)
                 {
@@ -246,7 +246,7 @@ namespace MinecraftClient.Protocol.Handlers
                     case PacketOutgoingType.TeleportConfirm: return 0x00;
                 }
             }
-            else if (protocol < Protocol18Handler.MC114Version) // MC 1.13 to 1.13.2
+            else if (protocol < (int)McVersion.V114) // MC 1.13 to 1.13.2
             {
                 switch (packet)
                 {
