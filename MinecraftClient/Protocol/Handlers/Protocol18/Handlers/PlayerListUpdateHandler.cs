@@ -1,15 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class PlayerListUpdateHandler : IPacketHandler
     {
-        public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
+
+        IMinecraftComHandler handler;
+        DataTypes dataTypes;
+        int protocolversion;
+        public PlayerListUpdateHandler(IMinecraftComHandler handler, DataTypes dataTypes, int protocolversion)
         {
-            if (protocolversion >= MC18Version)
+            this.handler = handler;
+            this.dataTypes = dataTypes;
+            this.protocolversion = protocolversion;
+        }
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
+        {
+            if (protocolversion >= (int)McVersion.V18)
             {
                 int action = dataTypes.ReadNextVarInt(packetData);
                 int numActions = dataTypes.ReadNextVarInt(packetData);

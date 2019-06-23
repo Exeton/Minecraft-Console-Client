@@ -1,5 +1,6 @@
 ﻿using MinecraftClient.Mapping;
 using MinecraftClient.Protocol.Handlers.Protocol18.Handlers;
+using MinecraftClient.Protocol.Handlers.Protocol18.Handlers._17Terrain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,68 +12,41 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18
 {
     class Protocol18PacketHandler : IPacketHandler
     {
-
-        internal const int MC18Version = 47;
-        internal const int MC19Version = 107;
-        internal const int MC191Version = 108;
-        internal const int MC110Version = 210;
-        internal const int MC1112Version = 316;
-        internal const int MC112Version = 335;
-        internal const int MC1121Version = 338;
-        internal const int MC1122Version = 340;
-        internal const int MC113Version = 393;
-        internal const int MC114Version = 477;
-        internal const int MC1142Version = 485;
-
-
-        private int compression_treshold = 0;
-        private bool autocomplete_received = false;
-        private int autocomplete_transaction_id = 0;
-        private readonly List<string> autocomplete_result = new List<string>();
-        private bool login_phase = true;
-        private int currentDimension;
-
-
         int protocolversion;
-        Protocol18Forge pForge;
-        Protocol18Terrain pTerrain;
-        IMinecraftComHandler handler;
-        SocketWrapper socketWrapper;
-        DataTypes dataTypes;
-        Thread netRead;
+        Dictionary<PacketIncomingType, IPacketHandler> packetHandlers = new Dictionary<PacketIncomingType, IPacketHandler>();
 
 
-
-        Dictionary<PacketIncomingType, IPacketHandler> packetHandlers;
-
-
-        public Protocol18PacketHandler(int protocolVersion, DataTypes dataTypes, IMinecraftComHandler handler)
+        public Protocol18PacketHandler(int protocolVersion, DataTypes dataTypes, IMinecraftComHandler handler, IPacketSender packetSender, Protocol18Terrain pTerrain, Protocol18Forge pForge, WorldInfo worldInfo, Protocol18Handler protocol18Handler)
         {
             this.protocolversion = protocolVersion;
-            this.dataTypes = dataTypes;
-            this.handler = handler;
 
-            packetHandlers.Add(PacketIncomingType.KeepAlive, new KeepAliveHandler());
-            packetHandlers.Add(PacketIncomingType.JoinGame, new JoinGameHandler());
-            packetHandlers.Add(PacketIncomingType.ChatMessage, new ChatMessageHandler());
-            packetHandlers.Add(PacketIncomingType.Respawn, new RespawnHandler());
-            packetHandlers.Add(PacketIncomingType.PlayerPositionAndLook, new PlayerPositionAndLookHandler());
-            packetHandlers.Add(PacketIncomingType.ChunkData, new ChunkDataHandler());
-            packetHandlers.Add(PacketIncomingType.MultiBlockChange, new MultiBlockChangeHandler());
-            packetHandlers.Add(PacketIncomingType.BlockChange, new BlockChangeHandler());
-            packetHandlers.Add(PacketIncomingType.MapChunkBulk, new MapChunkBulkHandler());
-            packetHandlers.Add(PacketIncomingType.UnloadChunk, new UnloadChunkHandler());
-            packetHandlers.Add(PacketIncomingType.PlayerListUpdate, new PlayerListUpdateHandler());
-            packetHandlers.Add(PacketIncomingType.TabCompleteResult, new TabCompleteResultHandler());
-            packetHandlers.Add(PacketIncomingType.PluginMessage, new PluginMessageHandler());
-            packetHandlers.Add(PacketIncomingType.KickPacket, new KickHandler());
-            packetHandlers.Add(PacketIncomingType.NetworkCompressionTreshold, new NetworkCompressionThresholdHandler());
-            packetHandlers.Add(PacketIncomingType.OpenWindow, new OpenWindowHandler());
-            packetHandlers.Add(PacketIncomingType.CloseWindow, new CloseWindowHandler());
-            packetHandlers.Add(PacketIncomingType.WindowItems, new WindowItemsHandler());
-            packetHandlers.Add(PacketIncomingType.ResourcePackSend, new ResourecePackSendHandler());
+            MultiVersionHandler blockHandler = new MultiVersionHandler(protocolVersion);
+            blockHandler.addPacketHandler(new BlockChangeHandler17(handler, dataTypes), (int)McVersion.V17).
+                addPacketHandler(new BlockChangeHandler18(handler, dataTypes), (int)McVersion.V18);
+            packetHandlers.Add(PacketIncomingType.BlockChange, blockHandler);
+
+
+            packetHandlers.Add(PacketIncomingType.KeepAlive, new KeepAliveHandler(packetSender));
+            packetHandlers.Add(PacketIncomingType.JoinGame, new JoinGameHandler(handler, dataTypes, worldInfo, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.ChatMessage, new ChatMessageHandler(handler, dataTypes));
+            packetHandlers.Add(PacketIncomingType.Respawn, new RespawnHandler(handler, dataTypes, worldInfo, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.PlayerPositionAndLook, new PlayerPositionAndLookHandler(packetSender, dataTypes, handler, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.ChunkData, new ChunkDataHandler(handler, dataTypes, pTerrain, worldInfo, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.MultiBlockChange, new MultiBlockChangeHandler(handler, dataTypes, protocolVersion));
+
+            packetHandlers.Add(PacketIncomingType.MapChunkBulk, new MapChunkBulkHandler(handler, dataTypes, protocolVersion, pTerrain, worldInfo));
+            packetHandlers.Add(PacketIncomingType.UnloadChunk, new UnloadChunkHandler(handler, dataTypes, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.PlayerListUpdate, new PlayerListUpdateHandler(handler, dataTypes, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.TabCompleteResult, new TabCompleteResultHandler(handler, dataTypes, protocol18Handler, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.PluginMessage, new PluginMessageHandler(handler, dataTypes, pForge, worldInfo, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.KickPacket, new KickHandler(handler, dataTypes));
+            packetHandlers.Add(PacketIncomingType.NetworkCompressionTreshold, new NetworkCompressionThresholdHandler(handler, dataTypes, protocol18Handler, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.OpenWindow, new OpenWindowHandler(handler, dataTypes));
+            packetHandlers.Add(PacketIncomingType.CloseWindow, new CloseWindowHandler(handler, dataTypes));
+            packetHandlers.Add(PacketIncomingType.WindowItems, new WindowItemsHandler(handler, dataTypes));
+            packetHandlers.Add(PacketIncomingType.ResourcePackSend, new ResourecePackSendHandler(dataTypes, packetSender, protocolVersion));
         }
-        public bool handlePacket(PacketIncomingType packetType, List<byte> packetData)
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
             IPacketHandler packetHandler;
             if (packetHandlers.TryGetValue(packetType, out packetHandler))

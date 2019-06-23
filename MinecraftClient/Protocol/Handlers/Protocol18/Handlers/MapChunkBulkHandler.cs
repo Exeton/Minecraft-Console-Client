@@ -7,16 +7,29 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class MapChunkBulkHandler : IPacketHandler
     {
-        public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
+        IMinecraftComHandler handler;
+        DataTypes dataTypes;
+        int protocolversion;
+        Protocol18Terrain pTerrain;
+        WorldInfo worldInfo;
+        public MapChunkBulkHandler(IMinecraftComHandler handler, DataTypes dataTypes, int protocolversion, Protocol18Terrain pTerrain, WorldInfo worldInfo)
         {
-            if (protocolversion < MC19Version && handler.GetTerrainEnabled())
+            this.handler = handler;
+            this.dataTypes = dataTypes;
+            this.protocolversion = protocolversion;
+            this.pTerrain = pTerrain;
+            this.worldInfo = worldInfo;
+        }
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
+        {
+            if (protocolversion < (int)McVersion.V19 && handler.GetTerrainEnabled())
             {
                 int chunkCount;
                 bool hasSkyLight;
                 List<byte> chunkData = packetData;
 
                 //Read global fields
-                if (protocolversion < MC18Version)
+                if (protocolversion < (int)McVersion.V18)
                 {
                     chunkCount = dataTypes.ReadNextShort(packetData);
                     int compressedDataSize = dataTypes.ReadNextInt(packetData);
@@ -41,14 +54,14 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
                     chunkXs[chunkColumnNo] = dataTypes.ReadNextInt(packetData);
                     chunkZs[chunkColumnNo] = dataTypes.ReadNextInt(packetData);
                     chunkMasks[chunkColumnNo] = dataTypes.ReadNextUShort(packetData);
-                    addBitmaps[chunkColumnNo] = protocolversion < MC18Version
+                    addBitmaps[chunkColumnNo] = protocolversion < (int)McVersion.V18
                         ? dataTypes.ReadNextUShort(packetData)
                         : (ushort)0;
                 }
 
                 //Process chunk records
                 for (int chunkColumnNo = 0; chunkColumnNo < chunkCount; chunkColumnNo++)
-                    pTerrain.ProcessChunkColumnData(chunkXs[chunkColumnNo], chunkZs[chunkColumnNo], chunkMasks[chunkColumnNo], addBitmaps[chunkColumnNo], hasSkyLight, true, currentDimension, chunkData);
+                    pTerrain.ProcessChunkColumnData(chunkXs[chunkColumnNo], chunkZs[chunkColumnNo], chunkMasks[chunkColumnNo], addBitmaps[chunkColumnNo], hasSkyLight, true, worldInfo.dimension, chunkData);
             }
             return true;
         }

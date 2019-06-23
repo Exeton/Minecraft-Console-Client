@@ -37,13 +37,13 @@ namespace MinecraftClient.Protocol.Handlers
         internal const int MC114Version = 477;
         internal const int MC1142Version = 485;
 
-        private int compression_treshold = 0;
-        private bool autocomplete_received = false;
-        private int autocomplete_transaction_id = 0;
-        private readonly List<string> autocomplete_result = new List<string>();
+        public int compression_treshold = 0;
+        public bool autocomplete_received = false;
+        public int autocomplete_transaction_id = 0;
+        public readonly List<string> autocomplete_result = new List<string>();
         private bool login_phase = true;
         private int protocolversion;
-        private int currentDimension;
+        private WorldInfo worldInfo = new WorldInfo();
 
         Protocol18Forge pForge;
         Protocol18Terrain pTerrain;
@@ -53,6 +53,7 @@ namespace MinecraftClient.Protocol.Handlers
         Thread netRead;
 
         IPacketHandler packetHandler;
+        IPacketSender packetSender;
 
         public Protocol18Handler(TcpClient Client, int protocolVersion, IMinecraftComHandler handler, ForgeInfo forgeInfo)
         {
@@ -86,6 +87,10 @@ namespace MinecraftClient.Protocol.Handlers
                 else Block.Palette = new Palette113();
             }
             else Block.Palette = new Palette112();
+
+            packetSender = new Protocol18PacketSender(this);
+            packetHandler = new Protocol18PacketHandler(protocolVersion, dataTypes, handler, packetSender, pTerrain, pForge, worldInfo, this);
+
         }
 
         /// <summary>
@@ -231,7 +236,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// </summary>
         /// <param name="packet">packet type</param>
         /// <param name="packetData">packet Data</param>
-        private void SendPacket(PacketOutgoingType packet, IEnumerable<byte> packetData)
+        public void SendPacket(PacketOutgoingType packet, IEnumerable<byte> packetData)
         {
             SendPacket(Protocol18PacketTypes.GetPacketOutgoingID(packet, protocolversion), packetData);
         }
@@ -241,7 +246,7 @@ namespace MinecraftClient.Protocol.Handlers
         /// </summary>
         /// <param name="packetID">packet ID</param>
         /// <param name="packetData">packet Data</param>
-        private void SendPacket(int packetID, IEnumerable<byte> packetData)
+        public void SendPacket(int packetID, IEnumerable<byte> packetData)
         {
             //The inner packet
             byte[] the_packet = dataTypes.ConcatBytes(dataTypes.GetVarInt(packetID), packetData.ToArray());

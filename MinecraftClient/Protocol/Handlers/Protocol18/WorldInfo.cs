@@ -5,8 +5,8 @@ using System.Text;
 
 namespace MinecraftClient.Protocol.Handlers.Protocol18
 {
-    public interface IPacketSender
+    public class WorldInfo
     {
-        void SendPacket(PacketOutgoingType packetOutgoingType, IEnumerable<byte> data);
+        public int dimension;
     }
 }

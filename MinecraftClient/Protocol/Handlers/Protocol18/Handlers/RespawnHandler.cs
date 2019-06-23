@@ -7,10 +7,22 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class RespawnHandler : IPacketHandler
     {
-        public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
+        IMinecraftComHandler handler;
+        DataTypes dataTypes;
+        WorldInfo worldInfo;
+        int protocolversion;
+        public RespawnHandler(IMinecraftComHandler handler, DataTypes dataTypes, WorldInfo worldInfo, int protocolversion)
         {
-            this.currentDimension = dataTypes.ReadNextInt(packetData);
-            if (protocolversion < MC114Version)
+            this.handler = handler;
+            this.dataTypes = dataTypes;
+            this.worldInfo = worldInfo;
+            this.protocolversion = protocolversion;
+        }
+
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
+        {
+            worldInfo.dimension = dataTypes.ReadNextInt(packetData);
+            if (protocolversion < (int)McVersion.V114)
                 dataTypes.ReadNextByte(packetData);           // Difficulty - 1.13 and below
             dataTypes.ReadNextByte(packetData);
             dataTypes.ReadNextString(packetData);

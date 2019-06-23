@@ -1,24 +1,38 @@
-﻿using System;
+﻿using MinecraftClient.Mapping;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
-    class PlayerPositionAndLookHandler : IPacketHandler
+    public class PlayerPositionAndLookHandler : IPacketHandler
     {
+
+        DataTypes dataTypes;
+        IPacketSender packetSender;
+        IMinecraftComHandler handler;
+        int protocolversion;
+        public PlayerPositionAndLookHandler(IPacketSender packetSender, DataTypes dataTypes, IMinecraftComHandler handler, int protocolversion)
+        {
+            this.dataTypes = dataTypes;
+            this.packetSender = packetSender;
+            this.handler = handler;
+            this.protocolversion = protocolversion;
+        }
+
         public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
         {
             if (handler.GetTerrainEnabled())
             {
-                double x = dataTypes.ReadNextDouble(packetData);
-                double y = dataTypes.ReadNextDouble(packetData);
-                double z = dataTypes.ReadNextDouble(packetData);
-                float yaw = dataTypes.ReadNextFloat(packetData);
-                float pitch = dataTypes.ReadNextFloat(packetData);
-                byte locMask = dataTypes.ReadNextByte(packetData);
+                double x = dataTypes.ReadNextDouble(data);
+                double y = dataTypes.ReadNextDouble(data);
+                double z = dataTypes.ReadNextDouble(data);
+                float yaw = dataTypes.ReadNextFloat(data);
+                float pitch = dataTypes.ReadNextFloat(data);
+                byte locMask = dataTypes.ReadNextByte(data);
 
-                if (protocolversion >= MC18Version)
+                if (protocolversion >= (int)McVersion.V18)
                 {
                     Location location = handler.GetCurrentLocation();
                     location.X = (locMask & 1 << 0) != 0 ? location.X + x : x;
@@ -29,11 +43,11 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
                 else handler.UpdateLocation(new Location(x, y, z), yaw, pitch);
             }
 
-            if (protocolversion >= MC19Version)
+            if (protocolversion >= (int)McVersion.V19)
             {
-                int teleportID = dataTypes.ReadNextVarInt(packetData);
+                int teleportID = dataTypes.ReadNextVarInt(data);
                 // Teleport confirm packet
-                SendPacket(PacketOutgoingType.TeleportConfirm, dataTypes.GetVarInt(teleportID));
+                packetSender.SendPacket(PacketOutgoingType.TeleportConfirm, dataTypes.GetVarInt(teleportID));
             }
             return true;
         }

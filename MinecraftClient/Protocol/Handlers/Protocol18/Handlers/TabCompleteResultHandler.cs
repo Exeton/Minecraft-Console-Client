@@ -7,22 +7,36 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class TabCompleteResultHandler : IPacketHandler
     {
-        public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
+
+        IMinecraftComHandler handler;
+        DataTypes dataTypes;
+        int protocolversion;
+        Protocol18Handler protocol18Handler;
+
+        public TabCompleteResultHandler(IMinecraftComHandler handler, DataTypes dataTypes, Protocol18Handler protocol18Handler, int protocolversion)
         {
-            if (protocolversion >= MC113Version)
+            this.handler = handler;
+            this.dataTypes = dataTypes;
+            this.protocol18Handler = protocol18Handler;
+            this.protocolversion = protocolversion;
+        }
+
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
+        {
+            if (protocolversion >= (int)McVersion.V113)
             {
-                autocomplete_transaction_id = dataTypes.ReadNextVarInt(packetData);
+                protocol18Handler.autocomplete_transaction_id = dataTypes.ReadNextVarInt(packetData);
                 dataTypes.ReadNextVarInt(packetData); // Start of text to replace
                 dataTypes.ReadNextVarInt(packetData); // Length of text to replace
             }
 
             int autocomplete_count = dataTypes.ReadNextVarInt(packetData);
-            autocomplete_result.Clear();
+            protocol18Handler.autocomplete_result.Clear();
 
             for (int i = 0; i < autocomplete_count; i++)
             {
-                autocomplete_result.Add(dataTypes.ReadNextString(packetData));
-                if (protocolversion >= MC113Version)
+                protocol18Handler.autocomplete_result.Add(dataTypes.ReadNextString(packetData));
+                if (protocolversion >= (int)McVersion.V113)
                 {
                     // Skip optional tooltip for each tab-complete result
                     if (dataTypes.ReadNextBool(packetData))
@@ -30,7 +44,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
                 }
             }
 
-            autocomplete_received = true;
+            protocol18Handler.autocomplete_received = true;
             return true;
         }
     }

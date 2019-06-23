@@ -8,7 +8,6 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
     class KeepAliveHandler : IPacketHandler
     {
         IPacketSender packetSender;
-
         public KeepAliveHandler(IPacketSender packetSender)
         {
             this.packetSender = packetSender;

@@ -8,7 +8,7 @@ namespace MinecraftClient.Protocol.Handlers
     /// <summary>
     /// Abstract outgoing packet numbering
     /// </summary>
-    enum PacketOutgoingType
+    public enum PacketOutgoingType
     {
         KeepAlive,
         ResourcePackStatus,

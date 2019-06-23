@@ -8,7 +8,7 @@ namespace MinecraftClient.Protocol.Handlers
     /// <summary>
     /// Abstract incoming packet numbering
     /// </summary>
-    enum PacketIncomingType
+    public enum PacketIncomingType
     {
         KeepAlive,
         JoinGame,

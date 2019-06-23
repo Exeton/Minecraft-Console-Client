@@ -11,7 +11,7 @@ namespace MinecraftClient.Protocol.Handlers
     /// <summary>
     /// Handle data types encoding / decoding
     /// </summary>
-    class DataTypes
+    public class DataTypes
     {
         /// <summary>
         /// Protocol version for adjusting data types

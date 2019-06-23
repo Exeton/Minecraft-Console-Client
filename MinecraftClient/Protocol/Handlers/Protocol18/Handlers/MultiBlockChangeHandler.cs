@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftClient.Mapping;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +8,22 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class MultiBlockChangeHandler : IPacketHandler
     {
-        public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
+        IMinecraftComHandler handler;
+        DataTypes dataTypes;
+        int protocolversion;
+        public MultiBlockChangeHandler(IMinecraftComHandler handler, DataTypes dataTypes, int protocolversion)
+        {
+            this.handler = handler;
+            this.dataTypes = dataTypes;
+            this.protocolversion = protocolversion;
+        }
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
             if (handler.GetTerrainEnabled())
             {
                 int chunkX = dataTypes.ReadNextInt(packetData);
                 int chunkZ = dataTypes.ReadNextInt(packetData);
-                int recordCount = protocolversion < MC18Version
+                int recordCount = protocolversion < (int)McVersion.V18
                     ? (int)dataTypes.ReadNextShort(packetData)
                     : dataTypes.ReadNextVarInt(packetData);
 
@@ -23,7 +33,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
                     ushort blockIdMeta;
                     int blockY;
 
-                    if (protocolversion < MC18Version)
+                    if (protocolversion < (int)McVersion.V18)
                     {
                         blockIdMeta = dataTypes.ReadNextUShort(packetData);
                         blockY = (ushort)dataTypes.ReadNextByte(packetData);

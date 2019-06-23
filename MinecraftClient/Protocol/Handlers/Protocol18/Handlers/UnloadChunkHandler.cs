@@ -7,9 +7,20 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class UnloadChunkHandler : IPacketHandler
     {
-        public bool HandlePacket(PacketIncomingType packetType, List<byte> data)
+
+        IMinecraftComHandler handler;
+        DataTypes dataTypes;
+        int protocolversion;
+
+        public UnloadChunkHandler(IMinecraftComHandler handler, DataTypes dataTypes, int protocolversion)
         {
-            if (protocolversion >= MC19Version && handler.GetTerrainEnabled())
+            this.handler = handler;
+            this.dataTypes = dataTypes;
+            this.protocolversion = protocolversion;
+        }
+        public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
+        {
+            if (protocolversion >= (int)McVersion.V19 && handler.GetTerrainEnabled())
             {
                 int chunkX = dataTypes.ReadNextInt(packetData);
                 int chunkZ = dataTypes.ReadNextInt(packetData);
