@@ -28,7 +28,6 @@ namespace MinecraftClient
         public static string Password = "";
 
         public static ServerConnectionInfo ServerConnectionInfo = new ServerConnectionInfo();
-        public static string SingleCommand = "";
         public static string ConsoleTitle = "";
 
         //Proxy Settings
@@ -211,7 +210,6 @@ namespace MinecraftClient
                                                 case "login": Login = argValue; break;
                                                 case "password": Password = argValue; break;
                                                 case "serverip": if (!SetServerIP(argValue)) serverAlias = argValue; ; break;
-                                                case "singlecommand": SingleCommand = argValue; break;
                                                 case "language": Language = argValue; break;
                                                 case "consoletitle": ConsoleTitle = argValue; break;
                                                 case "timestamps": ConsoleIO.EnableTimestamps = str2bool(argValue); break;

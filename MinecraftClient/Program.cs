@@ -127,10 +127,7 @@ namespace MinecraftClient
                 Settings.Password = args[1];
             
             if (args.Length >= 3)            
-                Settings.SetServerIP(args[2]);
-            
-            if (args.Length >= 4)           
-                Settings.SingleCommand = args[3];          
+                Settings.SetServerIP(args[2]);                   
         }
         
         static void promptLoginInfo()
@@ -264,12 +261,7 @@ namespace MinecraftClient
             {
                 try
                 {
-                    //Start the main TCP client
-                    if (Settings.SingleCommand != "")
-                    {
-                        Client = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, protocolversion, forgeInfo, Settings.SingleCommand);
-                    }
-                    else Client = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, forgeInfo, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort);
+                    Client = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, forgeInfo, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort);
 
                     //Update console title
                     if (Settings.ConsoleTitle != "")

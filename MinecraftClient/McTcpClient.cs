@@ -69,22 +69,7 @@ namespace MinecraftClient
         /// <param name="protocolversion">Minecraft protocol version to use</param>
         public McTcpClient(string username, string uuid, string sessionID, int protocolversion, ForgeInfo forgeInfo, string server_ip, ushort port)
         {
-            StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo, false, "");
-        }
-
-        /// <summary>
-        /// Starts the main chat client in single command sending mode
-        /// </summary>
-        /// <param name="username">The chosen username of a premium Minecraft Account</param>
-        /// <param name="uuid">The player's UUID for online-mode authentication</param>
-        /// <param name="sessionID">A valid sessionID obtained after logging in</param>
-        /// <param name="server_ip">The server IP</param>
-        /// <param name="port">The server port to use</param>
-        /// <param name="protocolversion">Minecraft protocol version to use</param>
-        /// <param name="command">The text or command to send.</param>
-        public McTcpClient(string username, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo, string command)
-        {
-            StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo, true, command);
+            StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo);
         }
 
         /// <summary>
@@ -96,9 +81,7 @@ namespace MinecraftClient
         /// <param name="port">The server port to use</param>
         /// <param name="protocolversion">Minecraft protocol version to use</param>
         /// <param name="uuid">The player's UUID for online-mode authentication</param>
-        /// <param name="singlecommand">If set to true, the client will send a single command and then disconnect from the server</param>
-        /// <param name="command">The text or command to send. Will only be sent if singlecommand is set to true.</param>
-        private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo, bool singlecommand, string command)
+        private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo)
         {
             terrainAndMovementsEnabled = Settings.TerrainAndMovements;
             inventoryHandlingEnabled = Settings.InventoryHandling;
@@ -110,24 +93,21 @@ namespace MinecraftClient
             this.host = server_ip;
             this.port = port;
 
-            if (!singlecommand)
+            if (botsOnHold.Count == 0)
             {
-                if (botsOnHold.Count == 0)
-                {
-                    if (Settings.AntiAFK_Enabled) { BotLoad(new ChatBots.AntiAFK(Settings.AntiAFK_Delay)); }
-                    if (Settings.Hangman_Enabled) { BotLoad(new ChatBots.HangmanGame(Settings.Hangman_English)); }
-                    if (Settings.Alerts_Enabled) { BotLoad(new ChatBots.Alerts()); }
-                    if (Settings.ChatLog_Enabled) { BotLoad(new ChatBots.ChatLog(Settings.ExpandVars(Settings.ChatLog_File), Settings.ChatLog_Filter, Settings.ChatLog_DateTime)); }
-                    if (Settings.PlayerLog_Enabled) { BotLoad(new ChatBots.PlayerListLogger(Settings.PlayerLog_Delay, Settings.ExpandVars(Settings.PlayerLog_File))); }
-                    if (Settings.AutoRelog_Enabled) { BotLoad(new ChatBots.AutoRelog(Settings.AutoRelog_Delay, Settings.AutoRelog_Retries)); }
-                    if (Settings.ScriptScheduler_Enabled) { BotLoad(new ChatBots.ScriptScheduler(Settings.ExpandVars(Settings.ScriptScheduler_TasksFile))); }
-                    if (Settings.RemoteCtrl_Enabled) { BotLoad(new ChatBots.RemoteControl()); }
-                    if (Settings.AutoRespond_Enabled) { BotLoad(new ChatBots.AutoRespond(Settings.AutoRespond_Matches)); }
-                    //Add your ChatBot here by uncommenting and adapting
-                    //BotLoad(new ChatBots.YourBot());
-                }
+                if (Settings.AntiAFK_Enabled) { BotLoad(new ChatBots.AntiAFK(Settings.AntiAFK_Delay)); }
+                if (Settings.Hangman_Enabled) { BotLoad(new ChatBots.HangmanGame(Settings.Hangman_English)); }
+                if (Settings.Alerts_Enabled) { BotLoad(new ChatBots.Alerts()); }
+                if (Settings.ChatLog_Enabled) { BotLoad(new ChatBots.ChatLog(Settings.ExpandVars(Settings.ChatLog_File), Settings.ChatLog_Filter, Settings.ChatLog_DateTime)); }
+                if (Settings.PlayerLog_Enabled) { BotLoad(new ChatBots.PlayerListLogger(Settings.PlayerLog_Delay, Settings.ExpandVars(Settings.PlayerLog_File))); }
+                if (Settings.AutoRelog_Enabled) { BotLoad(new ChatBots.AutoRelog(Settings.AutoRelog_Delay, Settings.AutoRelog_Retries)); }
+                if (Settings.ScriptScheduler_Enabled) { BotLoad(new ChatBots.ScriptScheduler(Settings.ExpandVars(Settings.ScriptScheduler_TasksFile))); }
+                if (Settings.RemoteCtrl_Enabled) { BotLoad(new ChatBots.RemoteControl()); }
+                if (Settings.AutoRespond_Enabled) { BotLoad(new ChatBots.AutoRespond(Settings.AutoRespond_Matches)); }
+                //Add your ChatBot here by uncommenting and adapting
+                //BotLoad(new ChatBots.YourBot());
             }
-
+            
             try
             {
                 client = ProxyHandler.newTcpClient(host, port);
@@ -139,35 +119,23 @@ namespace MinecraftClient
                 {
                     if (handler.Login())
                     {
-                        if (singlecommand)
-                        {
-                            handler.SendChatMessage(command);
-                            ConsoleIO.WriteLineFormatted("§7Command §8" + command + "§7 sent.");
-                            Thread.Sleep(5000);
-                            handler.Disconnect();
-                            Thread.Sleep(1000);
-                        }
-                        else
-                        {
-                            foreach (ChatBot bot in botsOnHold)
-                                BotLoad(bot, false);
-                            botsOnHold.Clear();
+                        foreach (ChatBot bot in botsOnHold)
+                            BotLoad(bot, false);
+                        botsOnHold.Clear();
 
-                            Console.WriteLine("Server was successfully joined.\nType '"
-                                + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
-                                + "quit' to leave the server.");
+                        Console.WriteLine("Server was successfully joined.\nType '"
+                            + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
+                            + "quit' to leave the server.");
 
-                            cmdprompt = new Thread(new ThreadStart(CommandPrompt));
-                            cmdprompt.Name = "MCC Command prompt";
-                            cmdprompt.Start();
+                        cmdprompt = new Thread(new ThreadStart(CommandPrompt));
+                        cmdprompt.Name = "MCC Command prompt";
+                        cmdprompt.Start();
 
-                            Thread respawnPacket = new Thread(new ThreadStart(() =>{
-                                Thread.Sleep(500);
-                                handler.SendRespawnPacket();
-                            }));
-                            respawnPacket.Start();
-
-                        }
+                        Thread respawnPacket = new Thread(new ThreadStart(() =>{
+                            Thread.Sleep(500);
+                            handler.SendRespawnPacket();
+                        }));
+                        respawnPacket.Start();                    
                     }
                 }
                 catch (Exception e)
@@ -193,7 +161,7 @@ namespace MinecraftClient
                     ReconnectionAttemptsLeft--;
                     Program.Restart();
                 }
-                else if (!singlecommand && Settings.interactiveMode)
+                else if (Settings.interactiveMode)
                 {
                     Program.HandleFailure();
                 }
@@ -282,7 +250,6 @@ namespace MinecraftClient
                 b.Initialize();
             if (this.handler != null)
                 b.AfterGameJoined();
-            Settings.SingleCommand = "";
         }
 
         /// <summary>
