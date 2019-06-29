@@ -8,6 +8,7 @@ using System.Threading;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Protocol.Session;
 using MinecraftClient.WinAPI;
+using MinecraftClient.Commands;
 
 namespace MinecraftClient
 {
@@ -26,6 +27,7 @@ namespace MinecraftClient
     static class Program
     {
         private static McTcpClient Client;
+        public static CommandHandler CommandHandler;
         public static string[] startupargs;
 
         public const string Version = MCHighestVersion;
@@ -43,9 +45,17 @@ namespace MinecraftClient
         {
             Console.WriteLine("Console Client for MC {0} to {1} - v{2} - By ORelio & Contributors", MCLowestVersion, MCHighestVersion, Version);
 
+            CommandHandler = new CommandHandler();
+            CommandHandler.addCommand("reco", new Reco());
+            CommandHandler.addCommand("reconnect", new Reco());
+            CommandHandler.addCommand("connect", new Connect());
+            CommandHandler.addCommand("exit", new Exit());
+            CommandHandler.addCommand("quit", new Exit());
+            CommandHandler.addCommand("help", new Help());
+
             args = PrepareConsole(args);
             args = LoadSettings(args);
-            readLoginAndServerSettings(args);
+            loadSettingsFromArgs(args);
 
             if (Settings.ConsoleTitle != "")
             {
@@ -53,15 +63,12 @@ namespace MinecraftClient
                 Console.Title = Settings.ExpandVars(Settings.ConsoleTitle);
             }
 
-            if (Settings.SessionCaching == CacheType.Disk)
-            {
-                bool cacheLoaded = SessionCache.InitializeDiskCache();
-                if (Settings.DebugMessages)
-                    ConsoleIO.WriteLineFormatted(cacheLoaded ? "§8Session data has been successfully loaded from disk." : "§8No sessions could be loaded from disk");
-            }
+            if (Settings.SessionCaching == CacheType.Disk)           
+                SessionCache.InitializeDiskCache();        
 
             promptLoginInfo();
             startupargs = args;
+
             InitializeClient();
         }
 
@@ -111,26 +118,19 @@ namespace MinecraftClient
 
             return args;
         }        
-        static void readLoginAndServerSettings(string[] args)
+        static void loadSettingsFromArgs(string[] args)
         {
-            if (args.Length >= 1)
-            {
+            if (args.Length >= 1)           
                 Settings.Login = args[0];
-                if (args.Length >= 2)
-                {
-                    Settings.Password = args[1];
-                    if (args.Length >= 3)
-                    {
-                        Settings.SetServerIP(args[2]);
-
-                        //Single command?
-                        if (args.Length >= 4)
-                        {
-                            Settings.SingleCommand = args[3];
-                        }
-                    }
-                }
-            }
+            
+            if (args.Length >= 2)           
+                Settings.Password = args[1];
+            
+            if (args.Length >= 3)            
+                Settings.SetServerIP(args[2]);
+            
+            if (args.Length >= 4)           
+                Settings.SingleCommand = args[3];          
         }
         
         static void promptLoginInfo()
@@ -382,43 +382,27 @@ namespace MinecraftClient
                         string command = " ";
                         ConsoleIO.WriteLineFormatted("Not connected to any server. Use '" + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar) + "help' for help.");
                         ConsoleIO.WriteLineFormatted("Or press Enter to exit Minecraft Console Client.");
-                        while (command.Length > 0)
+                        while ((command = Console.ReadLine().Trim()).Length > 0)
                         {
                             if (!ConsoleIO.BasicIO)
                             {
                                 ConsoleIO.Write('>');
                             }
-                            command = Console.ReadLine().Trim();
-                            if (command.Length > 0)
+
+                            if (Settings.internalCmdChar != ' ' && command[0] == Settings.internalCmdChar)
+                                command = command.Substring(1);
+
+                            command = Settings.ExpandVars(command);
+                            string[] argsAndCommand = command.Split(' ');
+                            if (argsAndCommand.Length > 1)
                             {
-                                string message = "";
-
-                                if (Settings.internalCmdChar != ' '
-                                    && command[0] == Settings.internalCmdChar)
-                                    command = command.Substring(1);
-
-                                if (command.StartsWith("reco"))
-                                {
-                                    message = new Commands.Reco().Run(null, Settings.ExpandVars(command));
-                                }
-                                else if (command.StartsWith("connect"))
-                                {
-                                    message = new Commands.Connect().Run(null, Settings.ExpandVars(command));
-                                }
-                                else if (command.StartsWith("exit") || command.StartsWith("quit"))
-                                {
-                                    message = new Commands.Exit().Run(null, Settings.ExpandVars(command));
-                                }
-                                else if (command.StartsWith("help"))
-                                {
-                                    ConsoleIO.WriteLineFormatted("§8MCC: " + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar) + new Commands.Reco().CMDDesc);
-                                    ConsoleIO.WriteLineFormatted("§8MCC: " + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar) + new Commands.Connect().CMDDesc);
-                                }
-                                else ConsoleIO.WriteLineFormatted("§8Unknown command '" + command.Split(' ')[0] + "'.");
-
-                                if (message != "")
-                                    ConsoleIO.WriteLineFormatted("§8MCC: " + message);
+                                string[] args = new string[argsAndCommand.Length - 1];
+                                Array.Copy(argsAndCommand, 1, args, 0, args.Length);
+                                CommandHandler.runCommand(argsAndCommand[0], args);
                             }
+                            else                        
+                                CommandHandler.runCommand(argsAndCommand[0]);
+                                                     
                         }
                     }));
                     offlinePrompt.Start();

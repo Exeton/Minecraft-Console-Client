@@ -10,7 +10,6 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18
         public int compressionThreshold;
         public SocketWrapper socketWrapper;
 
-
         public ConnectionInfo(SocketWrapper socketWrapper, int compressionThreshold)
         {
             this.compressionThreshold = compressionThreshold;
