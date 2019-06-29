@@ -225,11 +225,8 @@ namespace MinecraftClient.ChatBots
                     string toPerform = rule.Match(sender, message, msgType);
                     if (!String.IsNullOrEmpty(toPerform))
                     {
-                        string response = null;
                         LogToConsole(toPerform);
-                        PerformInternalCommand(toPerform, ref response);
-                        if (!String.IsNullOrEmpty(response))
-                            LogToConsole(response);
+                        Program.CommandHandler.runCommand(toPerform);
                     }
                 }
             }

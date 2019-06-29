@@ -100,6 +100,7 @@
     <Compile Include="Commands\Send.cs" />
     <Compile Include="Commands\Set.cs" />
     <Compile Include="Data\Player.cs" />
+    <Compile Include="Data\TcpClientRetriever.cs" />
     <Compile Include="Mapping\BlockPalettes\Palette112.cs" />
     <Compile Include="Mapping\BlockPalettes\Palette113.cs" />
     <Compile Include="Mapping\BlockPalettes\Palette114.cs" />

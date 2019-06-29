@@ -10,11 +10,11 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "debug"; } }
         public override string CMDDesc { get { return "debug [on|off]: toggle debug messages."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        public override string Run(string command, string[] args, string argStr)
         {
-            if (hasArg(command))
+            if (args.Length > 0)
             {
-                Settings.DebugMessages = (getArg(command).ToLower() == "on");
+                Settings.DebugMessages = (args[0].ToLower() == "on");
             }
             else Settings.DebugMessages = !Settings.DebugMessages;
             return "Debug messages are now " + (Settings.DebugMessages ? "ON" : "OFF");

@@ -168,28 +168,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Perform an internal MCC command (not a server command, use SendText() instead for that!)
-        /// </summary>
-        /// <param name="command">The command to process</param>
-        /// <returns>TRUE if the command was indeed an internal MCC command</returns>
-        protected bool PerformInternalCommand(string command)
-        {
-            string temp = "";
-            return Handler.PerformInternalCommand(command, ref temp);
-        }
-
-        /// <summary>
-        /// Perform an internal MCC command (not a server command, use SendText() instead for that!)
-        /// </summary>
-        /// <param name="command">The command to process</param>
-        /// <param name="response_msg">May contain a confirmation or error message after processing the command, or "" otherwise.</param>
-        /// <returns>TRUE if the command was indeed an internal MCC command</returns>
-        protected bool PerformInternalCommand(string command, ref string response_msg)
-        {
-            return Handler.PerformInternalCommand(command, ref response_msg);
-        }
-
-        /// <summary>
         /// Remove color codes ("§c") from a text message received from the server
         /// </summary>
         protected static string GetVerbatim(string text)

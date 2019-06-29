@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MinecraftClient.Data;
 using MinecraftClient.Mapping;
 
 namespace MinecraftClient.Commands
@@ -11,25 +12,25 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "look"; } }
         public override string CMDDesc { get { return "look <x y z|yaw pitch|up|down|east|west|north|south>: look at direction or coordinates."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        TcpClientRetriever tcpClientRetriever;
+
+        public Look(TcpClientRetriever tcpClientRetriever)
         {
+            this.tcpClientRetriever = tcpClientRetriever;
+        }
+
+        public override string Run(string command, string[] args, string argStr)
+        {
+            McTcpClient handler = tcpClientRetriever.GetTcpClient();
+
             if (handler.GetTerrainEnabled())
             {
-                string[] args = getArgs(command);
                 if (args.Length == 1)
                 {
-                    string dirStr = getArg(command).Trim().ToLower();
-                    Direction direction;
-                    switch (dirStr)
-                    {
-                        case "up": direction = Direction.Up; break;
-                        case "down": direction = Direction.Down; break;
-                        case "east": direction = Direction.East; break;
-                        case "west": direction = Direction.West; break;
-                        case "north": direction = Direction.North; break;
-                        case "south": direction = Direction.South; break;
-                        default: return "Unknown direction '" + dirStr + "'.";
-                    }
+                    string dirStr = args[0].Trim().ToLower();
+                    Direction direction = DirectionMethods.FromString(dirStr);
+                    if (direction == Direction.None)
+                        return "Invalid direction: " + dirStr;
 
                     handler.UpdateLocation(handler.GetCurrentLocation(), direction);
                     return "Looking " + dirStr;
@@ -60,7 +61,7 @@ namespace MinecraftClient.Commands
                         return "Looking at " + block;
                     }
                     catch (FormatException) { return CMDDesc; }
-                    
+
                 }
                 else return CMDDesc;
             }

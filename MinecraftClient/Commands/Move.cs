@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MinecraftClient.Data;
 using MinecraftClient.Mapping;
 
 namespace MinecraftClient.Commands
@@ -11,10 +12,15 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "move"; } }
         public override string CMDDesc { get { return "move <on|off|get|up|down|east|west|north|south|x y z>: walk or start walking."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        TcpClientRetriever tcpClientRetriever;
+        public Move(TcpClientRetriever tcpClientRetriever)
         {
-            string[] args = getArgs(command);
-            string argStr = getArg(command).Trim().ToLower();
+            this.tcpClientRetriever = tcpClientRetriever;
+        }
+
+        public override string Run(string command, string[] args, string argStr)
+        {
+            McTcpClient handler = tcpClientRetriever.GetTcpClient();
 
             if (argStr == "on")
             {
@@ -30,18 +36,12 @@ namespace MinecraftClient.Commands
             {
                 if (args.Length == 1)
                 {
-                    Direction direction;
-                    switch (argStr)
-                    {
-                        case "up": direction = Direction.Up; break;
-                        case "down": direction = Direction.Down; break;
-                        case "east": direction = Direction.East; break;
-                        case "west": direction = Direction.West; break;
-                        case "north": direction = Direction.North; break;
-                        case "south": direction = Direction.South; break;
-                        case "get": return handler.GetCurrentLocation().ToString();
-                        default: return "Unknown direction '" + argStr + "'.";
-                    }
+
+                    if (argStr == "get")
+                        return handler.GetCurrentLocation().ToString();
+
+                    Direction direction = DirectionMethods.FromString(argStr);
+
                     if (Movement.CanMove(handler.GetWorld(), handler.GetCurrentLocation(), direction))
                     {
                         handler.MoveTo(Movement.Move(handler.GetCurrentLocation(), direction));

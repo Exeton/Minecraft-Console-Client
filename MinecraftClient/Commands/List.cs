@@ -1,3 +1,4 @@
+using MinecraftClient.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,15 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "list"; } }
         public override string CMDDesc { get { return "list: get the player list."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        TcpClientRetriever tcpClientRetriever;
+        public List(TcpClientRetriever tcpClientRetriever)
         {
-            return "PlayerList: " + String.Join(", ", handler.GetOnlinePlayers());
+            this.tcpClientRetriever = tcpClientRetriever;
+        }
+
+        public override string Run(string command, string[] args, string argStr)
+        {
+            return "PlayerList: " + string.Join(", ", tcpClientRetriever.GetTcpClient().GetOnlinePlayers());
         }
     }
 }

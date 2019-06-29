@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftClient.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,9 +11,16 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "respawn"; } }
         public override string CMDDesc { get { return "respawn: Use this to respawn if you are dead."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        TcpClientRetriever tcpClientRetriever;
+
+        public Respawn(TcpClientRetriever tcpClientRetriever)
         {
-            handler.SendRespawnPacket();
+            this.tcpClientRetriever = tcpClientRetriever;
+        }
+
+        public override string Run(string command, string[] args, string argStr)
+        {
+            tcpClientRetriever.GetTcpClient().SendRespawnPacket();
             return "You have respawned.";
         }
     }

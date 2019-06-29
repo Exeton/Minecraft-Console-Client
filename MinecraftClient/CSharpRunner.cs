@@ -221,18 +221,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Perform an internal MCC command (not a server command, use SendText() instead for that!)
-        /// </summary>
-        /// <param name="command">The command to process</param>
-        /// <returns>TRUE if the command was indeed an internal MCC command</returns>
-        new public bool PerformInternalCommand(string command)
-        {
-            bool result = base.PerformInternalCommand(command);
-            tickHandler.WaitOne();
-            return result;
-        }
-
-        /// <summary>
         /// Disconnect from the server and restart the program
         /// It will unload and reload all the bots and then reconnect to the server
         /// </summary>

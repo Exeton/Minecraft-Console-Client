@@ -10,6 +10,7 @@ using MinecraftClient.Protocol;
 using MinecraftClient.Proxy;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Mapping;
+using MinecraftClient.Commands;
 
 namespace MinecraftClient
 {
@@ -235,7 +236,9 @@ namespace MinecraftClient
                             {
                                 string response_msg = "";
                                 string command = Settings.internalCmdChar == ' ' ? text : text.Substring(1);
-                                if (!PerformInternalCommand(Settings.ExpandVars(command), ref response_msg) && Settings.internalCmdChar == '/')
+                                CommandHandler commandHandler = null;
+
+                                if (!commandHandler.runCommand(command) && Settings.internalCmdChar == '/')
                                 {
                                     SendText(text);
                                 }
@@ -251,72 +254,6 @@ namespace MinecraftClient
             }
             catch (IOException) { }
             catch (NullReferenceException) { }
-        }
-
-        /// <summary>
-        /// Perform an internal MCC command (not a server command, use SendText() instead for that!)
-        /// </summary>
-        /// <param name="command">The command</param>
-        /// <param name="interactive_mode">Set to true if command was sent by the user using the command prompt</param>
-        /// <param name="response_msg">May contain a confirmation or error message after processing the command, or "" otherwise.</param>
-        /// <returns>TRUE if the command was indeed an internal MCC command</returns>
-        public bool PerformInternalCommand(string command, ref string response_msg)
-        {
-            /* Load commands from the 'Commands' namespace */
-
-            if (cmds.Count == 0)
-            {
-                Type[] cmds_classes = Program.GetTypesInNamespace("MinecraftClient.Commands");
-                foreach (Type type in cmds_classes)
-                {
-                    if (type.IsSubclassOf(typeof(Command)))
-                    {
-                        try
-                        {
-                            Command cmd = (Command)Activator.CreateInstance(type);
-                            cmds[cmd.CMDName.ToLower()] = cmd;
-                            cmd_names.Add(cmd.CMDName.ToLower());
-                            foreach (string alias in cmd.getCMDAliases())
-                                cmds[alias.ToLower()] = cmd;
-                        }
-                        catch (Exception e)
-                        {
-                            ConsoleIO.WriteLine(e.Message);
-                        }
-                    }
-                }
-            }
-
-            /* Process the provided command */
-
-            string command_name = command.Split(' ')[0].ToLower();
-            if (command_name == "help")
-            {
-                if (Command.hasArg(command))
-                {
-                    string help_cmdname = Command.getArgs(command)[0].ToLower();
-                    if (help_cmdname == "help")
-                    {
-                        response_msg = "help <cmdname>: show brief help about a command.";
-                    }
-                    else if (cmds.ContainsKey(help_cmdname))
-                    {
-                        response_msg = cmds[help_cmdname].CMDDesc;
-                    }
-                    else response_msg = "Unknown command '" + command_name + "'. Use 'help' for command list.";
-                }
-                else response_msg = "help <cmdname>. Available commands: " + String.Join(", ", cmd_names.ToArray()) + ". For server help, use '" + Settings.internalCmdChar + "send /help' instead.";
-            }
-            else if (cmds.ContainsKey(command_name))
-            {
-                response_msg = cmds[command_name].Run(this, command);
-            }
-            else
-            {
-                response_msg = "Unknown command '" + command_name + "'. Use '" + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar) + "help' for help.";
-                return false;
-            }
-            return true;
         }
 
         /// <summary>

@@ -10,9 +10,8 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "reco"; } }
         public override string CMDDesc { get { return "reco [account]: restart and reconnect to the server."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        public override string Run(string command, string[] args, string argStr)
         {
-            string[] args = getArgs(command);
             if (args.Length > 0)
             {
                 if (!Settings.SetAccount(args[0]))

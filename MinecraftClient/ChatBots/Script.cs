@@ -212,7 +212,7 @@ namespace MinecraftClient.ChatBots
                                         sleepticks = ticks;
                                         break;
                                     default:
-                                        if (!PerformInternalCommand(instruction_line))
+                                        if (!Program.CommandHandler.runCommand(instruction_line))
                                         {
                                             Update(); //Unknown command : process next line immediately
                                         }

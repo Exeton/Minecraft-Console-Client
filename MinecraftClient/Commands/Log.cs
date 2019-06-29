@@ -10,11 +10,11 @@ namespace MinecraftClient.Commands
         public override string CMDName { get { return "log"; } }
         public override string CMDDesc { get { return "log <text>: log some text to the console."; } }
 
-        public override string Run(McTcpClient handler, string command)
+        public override string Run(string command, string[] args, string argStr)
         {
-            if (hasArg(command))
+            if (args.Length > 0)
             {
-                ConsoleIO.WriteLogLine(getArg(command));
+                ConsoleIO.WriteLogLine(string.Join(" ", args));
                 return "";
             }
             else return CMDDesc;

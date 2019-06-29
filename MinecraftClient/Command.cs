@@ -32,14 +32,7 @@ namespace MinecraftClient
         /// <param name="command">The full command, eg: 'mycommand arg1 arg2'</param>
         /// <returns>A confirmation/error message, or "" if no message</returns>
 
-        public abstract string Run(McTcpClient handler, string command);
-
-        /// <summary>
-        /// Return a list of aliases for this command.
-        /// Override this method if you wish to put aliases to the command
-        /// </summary>
-
-        public virtual IEnumerable<string> getCMDAliases() { return new string[0]; }
+        public abstract string Run(string command, string[] args, string argStr);
 
         /// <summary>
         /// Check if at least one argument has been passed to the command
@@ -49,38 +42,6 @@ namespace MinecraftClient
         {
             int first_space = command.IndexOf(' ');
             return (first_space > 0 && first_space < command.Length - 1);
-        }
-
-        /// <summary>
-        /// Extract the argument string from the command
-        /// </summary>
-        /// <returns>Argument or "" if no argument</returns>
-
-        public static string getArg(string command)
-        {
-            if (hasArg(command))
-            {
-                return command.Substring(command.IndexOf(' ') + 1);
-            }
-            else return "";
-        }
-
-        /// <summary>
-        /// Extract the arguments as a string array from the command
-        /// </summary>
-        /// <returns>Argument array or empty array if no arguments</returns>
-
-        public static string[] getArgs(string command)
-        {
-            string[] args = getArg(command).Split(' ');
-            if (args.Length == 1 && args[0] == "")
-            {
-                return new string[] { };
-            }
-            else
-            {
-                return args;
-            }
         }
     }
 }

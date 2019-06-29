@@ -15,20 +15,33 @@ namespace MinecraftClient.Commands
             return this;
         }
 
-        public void runCommand(string cmd)
+        public bool runCommand(string cmdAndArgs)
         {
-            runCommand(cmd, new string[] { });
+            cmdAndArgs = Settings.ExpandVars(cmdAndArgs);
+            string[] argsAndCommand = cmdAndArgs.Split(' ');
+            if (argsAndCommand.Length > 1)
+            {
+                string[] args = new string[argsAndCommand.Length - 1];
+                Array.Copy(argsAndCommand, 1, args, 0, args.Length);
+                return runCommand(argsAndCommand[0], args);
+            }
+            else
+                return runCommand(argsAndCommand[0], new string[] { });
         }
 
-        public void runCommand(string cmd, string[] args)
+        public bool runCommand(string cmd, string[] args)
         {
             cmd = cmd.ToLower();
 
             Command command;
-            if (commands.TryGetValue(cmd, out command))      
-                command.Run(null, args);           
-            else
-                ConsoleIO.WriteLineFormatted("§8Unknown command '" + cmd + "'.");
+            if (commands.TryGetValue(cmd, out command))
+            {
+                command.Run(null, args, String.Join(" ", args).Trim());
+                return true;
+            }      
+
+            ConsoleIO.WriteLineFormatted("Unknown command '" + cmd + "'. Use '" + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar) + "help' for help.");
+            return false;
         }
 
     }

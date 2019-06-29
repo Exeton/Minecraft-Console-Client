@@ -51,7 +51,7 @@ namespace MinecraftClient
             CommandHandler.addCommand("connect", new Connect());
             CommandHandler.addCommand("exit", new Exit());
             CommandHandler.addCommand("quit", new Exit());
-            CommandHandler.addCommand("help", new Help());
+            CommandHandler.addCommand("help", new Help(CommandHandler));
 
             args = PrepareConsole(args);
             args = LoadSettings(args);
@@ -392,17 +392,7 @@ namespace MinecraftClient
                             if (Settings.internalCmdChar != ' ' && command[0] == Settings.internalCmdChar)
                                 command = command.Substring(1);
 
-                            command = Settings.ExpandVars(command);
-                            string[] argsAndCommand = command.Split(' ');
-                            if (argsAndCommand.Length > 1)
-                            {
-                                string[] args = new string[argsAndCommand.Length - 1];
-                                Array.Copy(argsAndCommand, 1, args, 0, args.Length);
-                                CommandHandler.runCommand(argsAndCommand[0], args);
-                            }
-                            else                        
-                                CommandHandler.runCommand(argsAndCommand[0]);
-                                                     
+                            CommandHandler.runCommand(command);                                                   
                         }
                     }));
                     offlinePrompt.Start();
