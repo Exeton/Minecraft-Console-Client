@@ -605,7 +605,7 @@ namespace MinecraftClient
         /// <returns>True if a path has been found</returns>
         protected bool MoveToLocation(Mapping.Location location, bool allowUnsafe = false)
         {
-            return Handler.MoveTo(location, allowUnsafe);
+            return Handler.player.MoveTo(location, allowUnsafe);
         }
 
         /// <summary>

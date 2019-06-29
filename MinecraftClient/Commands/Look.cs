@@ -13,10 +13,12 @@ namespace MinecraftClient.Commands
         public override string CMDDesc { get { return "look <x y z|yaw pitch|up|down|east|west|north|south>: look at direction or coordinates."; } }
 
         TcpClientRetriever tcpClientRetriever;
+        Player player;
 
-        public Look(TcpClientRetriever tcpClientRetriever)
+        public Look(TcpClientRetriever tcpClientRetriever, Player player)
         {
             this.tcpClientRetriever = tcpClientRetriever;
+            this.player = player;
         }
 
         public override string Run(string command, string[] args, string argStr)
@@ -32,7 +34,7 @@ namespace MinecraftClient.Commands
                     if (direction == Direction.None)
                         return "Invalid direction: " + dirStr;
 
-                    handler.UpdateLocation(handler.GetCurrentLocation(), direction);
+                    player.UpdateLocation(player.GetCurrentLocation(), direction);
                     return "Looking " + dirStr;
                 }
                 else if (args.Length == 2)
@@ -42,7 +44,7 @@ namespace MinecraftClient.Commands
                         float yaw = Single.Parse(args[0]);
                         float pitch = Single.Parse(args[1]);
 
-                        handler.UpdateLocation(handler.GetCurrentLocation(), yaw, pitch);
+                        player.UpdateLocation(player.GetCurrentLocation(), yaw, pitch);
                         return String.Format("Looking at YAW: {0} PITCH: {1}", yaw.ToString("0.00"), pitch.ToString("0.00"));
                     }
                     catch (FormatException) { return CMDDesc; }
@@ -56,7 +58,7 @@ namespace MinecraftClient.Commands
                         int z = int.Parse(args[2]);
 
                         Location block = new Location(x, y, z);
-                        handler.UpdateLocation(handler.GetCurrentLocation(), block);
+                        player.UpdateLocation(player.GetCurrentLocation(), block);
 
                         return "Looking at " + block;
                     }

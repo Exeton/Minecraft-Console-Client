@@ -171,7 +171,7 @@ namespace MinecraftClient
             ProtocolHandler.LoginResult loginResult = tryAuthenticateSession(session);
 
             if (loginResult == ProtocolHandler.LoginResult.Success)
-                handleLoginSuccess(session);
+                startTcpClient(session);
             else
                 handleLoginFailure(loginResult);
         }
@@ -208,7 +208,7 @@ namespace MinecraftClient
             
             return ProtocolHandler.LoginResult.LoginRequired;
         }
-        static void handleLoginSuccess(SessionToken session)
+        static void startTcpClient(SessionToken session)
         {
             Settings.Username = session.PlayerName;
 

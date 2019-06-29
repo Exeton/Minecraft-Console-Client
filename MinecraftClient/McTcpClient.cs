@@ -11,6 +11,7 @@ using MinecraftClient.Proxy;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Mapping;
 using MinecraftClient.Commands;
+using MinecraftClient.Data;
 
 namespace MinecraftClient
 {
@@ -21,8 +22,6 @@ namespace MinecraftClient
     {
         public static int ReconnectionAttemptsLeft = 0;
 
-        private static readonly List<string> cmd_names = new List<string>();
-        private static readonly Dictionary<string, Command> cmds = new Dictionary<string, Command>();
         private readonly Dictionary<Guid, string> onlinePlayers = new Dictionary<Guid, string>();
 
         private readonly List<ChatBot> bots = new List<ChatBot>();
@@ -32,20 +31,14 @@ namespace MinecraftClient
         private readonly Dictionary<string, List<ChatBot>> registeredBotPluginChannels = new Dictionary<string, List<ChatBot>>();
         private readonly List<string> registeredServerPluginChannels = new List<String>();
 
-        private bool terrainAndMovementsEnabled;
-        private bool terrainAndMovementsRequested = false;
+        public static bool terrainAndMovementsEnabled;
+        public static bool terrainAndMovementsRequested = false;
         private bool inventoryHandlingEnabled;
         private bool inventoryHandlingRequested = false;
 
-        private object locationLock = new object();
-        private bool locationReceived = false;
+        public Player player;
+
         private World world = new World();
-        private Queue<Location> steps;
-        private Queue<Location> path;
-        private Location location;
-        private float? yaw;
-        private float? pitch;
-        private double motionY;
 
         private string host;
         private int port;
@@ -59,7 +52,6 @@ namespace MinecraftClient
         public string GetUsername() { return username; }
         public string GetUserUUID() { return uuid; }
         public string GetSessionID() { return sessionid; }
-        public Location GetCurrentLocation() { return location; }
         public World GetWorld() { return world; }
 
         TcpClient client;
@@ -168,6 +160,13 @@ namespace MinecraftClient
                             cmdprompt = new Thread(new ThreadStart(CommandPrompt));
                             cmdprompt.Name = "MCC Command prompt";
                             cmdprompt.Start();
+
+                            Thread respawnPacket = new Thread(new ThreadStart(() =>{
+                                Thread.Sleep(500);
+                                handler.SendRespawnPacket();
+                            }));
+                            respawnPacket.Start();
+
                         }
                     }
                 }
@@ -199,6 +198,8 @@ namespace MinecraftClient
                     Program.HandleFailure();
                 }
             }
+
+            player = new Player(world, handler);
         }
 
         /// <summary>
@@ -208,13 +209,9 @@ namespace MinecraftClient
         {
             try
             {
-                string text = "";
-                Thread.Sleep(500);
-                handler.SendRespawnPacket();
-
                 while (client.Client.Connected)
                 {
-                    text = ConsoleIO.ReadLine();
+                    string text = ConsoleIO.ReadLine();
                     if (ConsoleIO.BasicIO && text.Length > 0 && text[0] == (char)0x00)
                     {
                         //Process a request from the GUI
@@ -234,17 +231,12 @@ namespace MinecraftClient
                         {
                             if (Settings.internalCmdChar == ' ' || text[0] == Settings.internalCmdChar)
                             {
-                                string response_msg = "";
                                 string command = Settings.internalCmdChar == ' ' ? text : text.Substring(1);
                                 CommandHandler commandHandler = null;
 
                                 if (!commandHandler.runCommand(command) && Settings.internalCmdChar == '/')
                                 {
                                     SendText(text);
-                                }
-                                else if (response_msg.Length > 0)
-                                {
-                                    ConsoleIO.WriteLineFormatted("§8MCC: " + response_msg);
                                 }
                             }
                             else SendText(text);
@@ -396,7 +388,7 @@ namespace MinecraftClient
             {
                 terrainAndMovementsEnabled = false;
                 terrainAndMovementsRequested = false;
-                locationReceived = false;
+                player.locationReceived = false;
                 world.Clear();
             }
             return true;
@@ -426,114 +418,6 @@ namespace MinecraftClient
                 playerInventory = null;
             }
             return true;
-        }
-
-        /// <summary>
-        /// Called when the server sends a new player location,
-        /// or if a ChatBot whishes to update the player's location.
-        /// </summary>
-        /// <param name="location">The new location</param>
-        /// <param name="relative">If true, the location is relative to the current location</param>
-        public void UpdateLocation(Location location, bool relative)
-        {
-            lock (locationLock)
-            {
-                if (relative)
-                {
-                    this.location += location;
-                }
-                else this.location = location;
-                locationReceived = true;
-            }
-        }
-
-        /// <summary>
-        /// Called when the server sends a new player location,
-        /// or if a ChatBot whishes to update the player's location.
-        /// </summary>
-        /// <param name="location">The new location</param>
-        /// <param name="yaw">Yaw to look at</param>
-        /// <param name="pitch">Pitch to look at</param>
-        public void UpdateLocation(Location location, float yaw, float pitch)
-        {
-            this.yaw = yaw;
-            this.pitch = pitch;
-            UpdateLocation(location, false);
-        }
-
-        /// <summary>
-        /// Called when the server sends a new player location,
-        /// or if a ChatBot whishes to update the player's location.
-        /// </summary>
-        /// <param name="location">The new location</param>
-        /// <param name="lookAt">Block coordinates to look at</param>
-        public void UpdateLocation(Location location, Location lookAtLocation)
-        {
-            double dx = lookAtLocation.X - (location.X - 0.5);
-            double dy = lookAtLocation.Y - (location.Y + 1);
-            double dz = lookAtLocation.Z - (location.Z - 0.5);
-
-            double r = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-
-            float yaw = Convert.ToSingle(-Math.Atan2(dx, dz) / Math.PI * 180);
-            float pitch = Convert.ToSingle(-Math.Asin(dy / r) / Math.PI * 180);
-            if (yaw < 0) yaw += 360;
-
-            UpdateLocation(location, yaw, pitch);
-        }
-
-        /// <summary>
-        /// Called when the server sends a new player location,
-        /// or if a ChatBot whishes to update the player's location.
-        /// </summary>
-        /// <param name="location">The new location</param>
-        /// <param name="direction">Direction to look at</param>
-        public void UpdateLocation(Location location, Direction direction)
-        {
-            float yaw = 0;
-            float pitch = 0;
-
-            switch (direction)
-            {
-                case Direction.Up:
-                    pitch = -90;
-                    break;
-                case Direction.Down:
-                    pitch = 90;
-                    break;
-                case Direction.East:
-                    yaw = 270;
-                    break;
-                case Direction.West:
-                    yaw = 90;
-                    break;
-                case Direction.North:
-                    yaw = 180;
-                    break;
-                case Direction.South:
-                    break;
-                default:
-                    throw new ArgumentException("Unknown direction", "direction");
-            }
-
-            UpdateLocation(location, yaw, pitch);
-        }
-
-        /// <summary>
-        /// Move to the specified location
-        /// </summary>
-        /// <param name="location">Location to reach</param>
-        /// <param name="allowUnsafe">Allow possible but unsafe locations</param>
-        /// <returns>True if a path has been found</returns>
-        public bool MoveTo(Location location, bool allowUnsafe = false)
-        {
-            lock (locationLock)
-            {
-                if (Movement.GetAvailableMoves(world, this.location, allowUnsafe).Contains(location))
-                    path = new Queue<Location>(new[] { location });
-                else path = Movement.CalculatePath(world, this.location, location, allowUnsafe);
-                return path != null;
-            }
         }
 
         /// <summary>
@@ -661,37 +545,8 @@ namespace MinecraftClient
                 }
             }
 
-            if (terrainAndMovementsEnabled && locationReceived)
-            {
-                lock (locationLock)
-                {
-                    for (int i = 0; i < 2; i++) //Needs to run at 20 tps; MCC runs at 10 tps
-                    {
-                        if (yaw == null || pitch == null)
-                        {
-                            if (steps != null && steps.Count > 0)
-                            {
-                                location = steps.Dequeue();
-                            }
-                            else if (path != null && path.Count > 0)
-                            {
-                                Location next = path.Dequeue();
-                                steps = Movement.Move2Steps(location, next, ref motionY);
-                                UpdateLocation(location, next + new Location(0, 1, 0)); // Update yaw and pitch to look at next step
-                            }
-                            else
-                            {
-                                location = Movement.HandleGravity(world, location, ref motionY);
-                            }
-                        }
-                        handler.SendLocationUpdate(location, Movement.IsOnGround(world, location), yaw, pitch);
-                    }
-                    // First 2 updates must be player position AND look, and player must not move (to conform with vanilla)
-                    // Once yaw and pitch have been sent, switch back to location-only updates (without yaw and pitch)
-                    yaw = null;
-                    pitch = null;
-                }
-            }
+            player.OnUpdate();
+
         }
 
         /// <summary>
@@ -893,6 +748,16 @@ namespace MinecraftClient
                     bot.OnPluginMessage(channel, data);
                 }
             }
+        }
+
+        public Location GetCurrentLocation()
+        {
+            return player.GetCurrentLocation();
+        }
+
+        public void UpdateLocation(Location location, float yaw, float pitch)
+        {
+            player.UpdateLocation(location, yaw, pitch);
         }
     }
 }

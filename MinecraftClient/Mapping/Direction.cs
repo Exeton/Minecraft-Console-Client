@@ -34,9 +34,41 @@ namespace MinecraftClient.Mapping
                 case "north": return Direction.North;
                 case "south": return Direction.South;
             }
-
             return Direction.None;
         }
+
+        public static KeyValuePair<float, float> GetYawAndPitch(this Direction direction)
+        {
+            float yaw = 0;
+            float pitch = 0;
+
+            switch (direction)
+            {
+                case Direction.Up:
+                    pitch = -90;
+                    break;
+                case Direction.Down:
+                    pitch = 90;
+                    break;
+                case Direction.East:
+                    yaw = 270;
+                    break;
+                case Direction.West:
+                    yaw = 90;
+                    break;
+                case Direction.North:
+                    yaw = 180;
+                    break;
+                case Direction.South:
+                    break;
+                default:
+                    throw new ArgumentException("Unknown direction", "direction");
+            }
+
+            return new KeyValuePair<float, float>(yaw, pitch);
+        }
+
+
     }
 
 }
