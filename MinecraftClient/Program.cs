@@ -11,6 +11,7 @@ using MinecraftClient.WinAPI;
 using MinecraftClient.Commands;
 using MinecraftClient.API;
 using System.IO;
+using static MinecraftClient.ChatBot;
 
 namespace MinecraftClient
 {
@@ -258,7 +259,7 @@ namespace MinecraftClient
                 Console.WriteLine("Retrieving Server Info...");
                 if (!ProtocolHandler.GetServerInfo(Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, ref protocolversion, ref forgeInfo))
                 {
-                    HandleFailure("Failed to ping this IP.", true, ChatBots.AutoRelog.DisconnectReason.ConnectionLost);
+                    HandleFailure("Failed to ping this IP.", true, DisconnectReason.ConnectionLost);
                     return;
                 }
             }
@@ -343,7 +344,7 @@ namespace MinecraftClient
         /// <param name="errorMessage">Error message to display and optionally pass to AutoRelog bot</param>
         /// <param name="versionError">Specify if the error is related to an incompatible or unkown server version</param>
         /// <param name="disconnectReason">If set, the error message will be processed by the AutoRelog bot</param>
-        public static void HandleFailure(string errorMessage = null, bool versionError = false, ChatBots.AutoRelog.DisconnectReason? disconnectReason = null)
+        public static void HandleFailure(string errorMessage = null, bool versionError = false, DisconnectReason? disconnectReason = null)
         {
             if (!String.IsNullOrEmpty(errorMessage))
             {
@@ -354,8 +355,8 @@ namespace MinecraftClient
 
                 if (disconnectReason.HasValue)
                 {
-                    if (ChatBots.AutoRelog.OnDisconnectStatic(disconnectReason.Value, errorMessage))
-                        return; //AutoRelog is triggering a restart of the client
+                    //if (ChatBots.AutoRelog.OnDisconnectStatic(disconnectReason.Value, errorMessage))
+                        //return; //AutoRelog is triggering a restart of the client
                 }
             }
 

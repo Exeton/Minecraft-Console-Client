@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MinecraftClient.API
 {
-    public class CCAPI
+    public class ConsoleAPI
     {
 
         public static McTcpClient GetTcpClient()

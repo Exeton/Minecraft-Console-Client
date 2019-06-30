@@ -95,34 +95,6 @@ namespace MinecraftClient
         public static bool ResolveSrvRecords = true;
         public static bool ResolveSrvRecordsShortTimeout = true;
 
-        //Hangman Settings
-        public static bool Hangman_Enabled = false;
-        public static bool Hangman_English = true;
-        public static string Hangman_FileWords_EN = "hangman-en.txt";
-        public static string Hangman_FileWords_FR = "hangman-fr.txt";
-
-        //Alerts Settings
-        public static bool Alerts_Enabled = false;
-        public static bool Alerts_Beep_Enabled = true;
-        public static string Alerts_MatchesFile = "alerts.txt";
-        public static string Alerts_ExcludesFile = "alerts-exclude.txt";
-
-        //ChatLog Settings
-        public static bool ChatLog_Enabled = false;
-        public static bool ChatLog_DateTime = true;
-        public static string ChatLog_File = "chatlog.txt";
-        public static ChatBots.ChatLog.MessageFilter ChatLog_Filter = ChatBots.ChatLog.MessageFilter.AllMessages;
-
-        //PlayerListLog Settings
-        public static bool PlayerLog_Enabled = false;
-        public static string PlayerLog_File = "playerlog.txt";
-        public static int PlayerLog_Delay = 600;
-
-        //AutoRelog Settings
-        public static bool AutoRelog_Enabled = false;
-        public static int AutoRelog_Delay = 10;
-        public static int AutoRelog_Retries = 3;
-        public static string AutoRelog_KickMessagesFile = "kickmessages.txt";
 
         //Script Scheduler Settings
         public static bool ScriptScheduler_Enabled = false;
@@ -315,55 +287,6 @@ namespace MinecraftClient
                                                         ResolveSrvRecordsShortTimeout = false;
                                                     }
                                                     break;
-                                            }
-                                            break;
-
-                                        case ParseMode.Alerts:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": Alerts_Enabled = str2bool(argValue); break;
-                                                case "alertsfile": Alerts_MatchesFile = argValue; break;
-                                                case "excludesfile": Alerts_ExcludesFile = argValue; break;
-                                                case "beeponalert": Alerts_Beep_Enabled = str2bool(argValue); break;
-                                            }
-                                            break;
-
-                                        case ParseMode.AntiAFK:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": AntiAFK_Enabled = str2bool(argValue); break;
-                                                case "delay": AntiAFK_Delay = str2int(argValue); break;
-                                                case "command": AntiAFK_Command = argValue == "" ? "/ping" : argValue; break;
-                                            }
-                                            break;
-
-                                        case ParseMode.AutoRelog:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": AutoRelog_Enabled = str2bool(argValue); break;
-                                                case "delay": AutoRelog_Delay = str2int(argValue); break;
-                                                case "retries": AutoRelog_Retries = str2int(argValue); break;
-                                                case "kickmessagesfile": AutoRelog_KickMessagesFile = argValue; break;
-                                            }
-                                            break;
-
-                                        case ParseMode.ChatLog:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": ChatLog_Enabled = str2bool(argValue); break;
-                                                case "timestamps": ChatLog_DateTime = str2bool(argValue); break;
-                                                case "filter": ChatLog_Filter = ChatBots.ChatLog.str2filter(argValue); break;
-                                                case "logfile": ChatLog_File = argValue; break;
-                                            }
-                                            break;
-
-                                        case ParseMode.Hangman:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": Hangman_Enabled = str2bool(argValue); break;
-                                                case "english": Hangman_English = str2bool(argValue); break;
-                                                case "wordsfile": Hangman_FileWords_EN = argValue; break;
-                                                case "fichiermots": Hangman_FileWords_FR = argValue; break;
                                             }
                                             break;
 

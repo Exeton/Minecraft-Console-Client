@@ -299,6 +299,11 @@ namespace MinecraftClient
             {
                 json = text;
                 text = ChatParser.ParseText(json, links);
+
+                foreach (IPlugin plugin in plugins)
+                {
+                    plugin.OnText(text);
+                }
             }
             ConsoleIO.WriteLineFormatted(text, true);
             if (Settings.DisplayChatLinks)

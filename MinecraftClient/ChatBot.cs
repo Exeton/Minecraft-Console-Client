@@ -70,7 +70,7 @@ namespace MinecraftClient
                 if (MessageCooldownEnded)
                 {
                     string text = chatQueue.Dequeue();
-                    LogToConsole("Sending '" + text + "'");
+                    Console.WriteLine("Sending '" + text + "'");
                     lastMessageSentTime = DateTime.Now;
                     Handler.SendText(text);
                 }
@@ -80,45 +80,6 @@ namespace MinecraftClient
         /* ================================================== */
         /*   Main methods to override for creating your bot   */
         /* ================================================== */
-
-        /// <summary>
-        /// Anything you want to initialize your bot, will be called on load by MinecraftCom
-        /// This method is called only once, whereas AfterGameJoined() is called once per server join.
-        ///
-        /// NOTE: Chat messages cannot be sent at this point in the login process.
-        /// If you want to send a message when the bot is loaded, use AfterGameJoined.
-        /// </summary>
-        public virtual void Initialize() { }
-
-        /// <summary>
-        /// Called after the server has been joined successfully and chat messages are able to be sent.
-        /// This method is called again after reconnecting to the server, whereas Initialize() is called only once.
-        ///
-        /// NOTE: This is not always right after joining the server - if the bot was loaded after logging
-        /// in this is still called.
-        /// </summary>
-        public virtual void AfterGameJoined() { }
-
-        /// <summary>
-        /// Will be called every ~100ms (10fps) if loaded in MinecraftCom
-        /// </summary>
-        public virtual void Update() { }
-
-        /// <summary>
-        /// Any text sent by the server will be sent here by MinecraftCom
-        /// </summary>
-        /// <param name="text">Text from the server</param>
-        public virtual void GetText(string text) { }
-
-        /// <summary>
-        /// Any text sent by the server will be sent here by MinecraftCom (extended variant)
-        /// </summary>
-        /// <remarks>
-        /// You can use Json.ParseJson() to process the JSON string.
-        /// </remarks>
-        /// <param name="text">Text from the server</param>
-        /// <param name="json">Raw JSON from the server. This parameter will be NULL on MC 1.5 or lower!</param>
-        public virtual void GetText(string text, string json) { }
 
         /// <summary>
         /// Is called when the client has been disconnected fom the server
@@ -145,47 +106,14 @@ namespace MinecraftClient
         /* =================================================================== */
 
         /// <summary>
-        /// Send text to the server. Can be anything such as chat messages or commands
-        /// </summary>
-        /// <param name="text">Text to send to the server</param>
-        /// <param name="sendImmediately">Whether the message should be sent immediately rather than being queued to avoid chat spam</param>
-        /// <returns>True if the text was sent with no error</returns>
-        protected bool SendText(string text, bool sendImmediately = false)
-        {
-            if (Settings.botMessageDelay.TotalSeconds > 0 && !sendImmediately)
-            {
-                if (!MessageCooldownEnded)
-                {
-                    chatQueue.Enqueue(text);
-                    // TODO: We don't know whether there was an error at this point, so we assume there isn't.
-                    // Might not be the best idea.
-                    return true;
-                }
-            }
-
-            LogToConsole("Sending '" + text + "'");
-            lastMessageSentTime = DateTime.Now;
-            return Handler.SendText(text);
-        }
-
-        /// <summary>
         /// Remove color codes ("§c") from a text message received from the server
         /// </summary>
-        protected static string GetVerbatim(string text)
+        public static string StripColor(string text)
         {
-            if ( String.IsNullOrEmpty(text) )
+            if (String.IsNullOrEmpty(text) )
                 return String.Empty;
 
-            int idx = 0;
-            var data = new char[text.Length];
-
-            for ( int i = 0; i < text.Length; i++ )
-                if ( text[i] != '§' )
-                    data[idx++] = text[i];
-                else
-                    i++;
-
-            return new string(data, 0, idx);
+            return text.Replace("§", "");
         }
 
         /// <summary>
@@ -218,7 +146,7 @@ namespace MinecraftClient
             if (String.IsNullOrEmpty(text))
                 return false;
 
-            text = GetVerbatim(text);
+            text = StripColor(text);
 
             //User-defined regex for private chat messages
             if (Settings.ChatFormat_Private != null)
@@ -329,7 +257,7 @@ namespace MinecraftClient
             if (String.IsNullOrEmpty(text))
                 return false;
 
-            text = GetVerbatim(text);
+            text = StripColor(text);
 
             //User-defined regex for public chat messages
             if (Settings.ChatFormat_Public != null)
@@ -432,7 +360,7 @@ namespace MinecraftClient
             if (String.IsNullOrEmpty(text))
                 return false;
 
-            text = GetVerbatim(text);
+            text = StripColor(text);
 
             //User-defined regex for teleport requests
             if (Settings.ChatFormat_TeleportRequest != null)
@@ -478,39 +406,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Write some text in the console. Nothing will be sent to the server.
-        /// </summary>
-        /// <param name="text">Log text to write</param>
-        protected void LogToConsole(object text)
-        {
-            ConsoleIO.WriteLogLine(String.Format("[{0}] {1}", this.GetType().Name, text));
-            string logfile = Settings.ExpandVars(Settings.chatbotLogFile);
-
-            if (!String.IsNullOrEmpty(logfile))
-            {
-                if (!File.Exists(logfile))
-                {
-                    try { Directory.CreateDirectory(Path.GetDirectoryName(logfile)); }
-                    catch { return; /* Invalid path or access denied */ }
-                    try { File.WriteAllText(logfile, ""); }
-                    catch { return; /* Invalid file name or access denied */ }
-                }
-
-                File.AppendAllLines(logfile, new string[] { GetTimestamp() + ' ' + text });
-            }
-        }
-
-        /// <summary>
-        /// Write some text in the console, but only if DebugMessages is enabled in INI file. Nothing will be sent to the server.
-        /// </summary>
-        /// <param name="text">Debug log text to write</param>
-        protected void LogDebugToConsole(object text)
-        {
-            if (Settings.DebugMessages)
-                LogToConsole(text);
-        }
-
-        /// <summary>
         /// Disconnect from the server and restart the program
         /// It will unload and reload all the bots and then reconnect to the server
         /// </summary>
@@ -531,16 +426,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Send a private message to a player
-        /// </summary>
-        /// <param name="player">Player name</param>
-        /// <param name="message">Message</param>
-        protected void SendPrivateMessage(string player, string message)
-        {
-            SendText(String.Format("/{0} {1} {2}", Settings.PrivateMsgsCmdName, player, message));
-        }
-
-        /// <summary>
         /// Run a script from a file using a Scripting bot
         /// </summary>
         /// <param name="filename">File name</param>
@@ -551,54 +436,14 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Check whether Terrain and Movements is enabled.
-        /// </summary>
-        /// <returns>Enable status.</returns>
-        public bool GetTerrainEnabled()
-        {
-            return Handler.GetTerrainEnabled();
-        }
-
-        /// <summary>
-        /// Enable or disable Terrain and Movements.
-        /// Please note that Enabling will be deferred until next relog, respawn or world change.
-        /// </summary>
-        /// <param name="enabled">Enabled</param>
-        /// <returns>TRUE if the setting was applied immediately, FALSE if delayed.</returns>
-        public bool SetTerrainEnabled(bool enabled)
-        {
-            return Handler.SetTerrainEnabled(enabled);
-        }
-
-        /// <summary>
         /// Get the current Minecraft World
         /// </summary>
         /// <returns>Minecraft world or null if associated setting is disabled</returns>
         protected Mapping.World GetWorld()
         {
-            if (GetTerrainEnabled())
+            if (Handler.GetTerrainEnabled())
                 return Handler.GetWorld();
             return null;
-        }
-
-        /// <summary>
-        /// Get the current location of the player
-        /// </summary>
-        /// <returns>Minecraft world or null if associated setting is disabled</returns>
-        protected Mapping.Location GetCurrentLocation()
-        {
-            return Handler.player.GetCurrentLocation();
-        }
-
-        /// <summary>
-        /// Move to the specified location
-        /// </summary>
-        /// <param name="location">Location to reach</param>
-        /// <param name="allowUnsafe">Allow possible but unsafe locations</param>
-        /// <returns>True if a path has been found</returns>
-        protected bool MoveToLocation(Mapping.Location location, bool allowUnsafe = false)
-        {
-            return Handler.player.MoveTo(location, allowUnsafe);
         }
 
         /// <summary>
@@ -634,7 +479,7 @@ namespace MinecraftClient
             }
             else
             {
-                LogToConsole("File not found: " + Settings.Alerts_MatchesFile);
+                Console.WriteLine("File not found: "); // + Settings.Alerts_MatchesFile
                 return new string[0];
             }
         }

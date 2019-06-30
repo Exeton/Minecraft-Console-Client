@@ -72,7 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="API\CCAPI.cs" />
+    <Compile Include="API\ConsoleAPI.cs" />
     <Compile Include="API\IPlugin.cs" />
     <Compile Include="API\PluginLoader.cs" />
     <Compile Include="AutoTimeout.cs" />
@@ -82,8 +82,6 @@
     <Compile Include="ChatBots\AutoRelog.cs" />
     <Compile Include="ChatBots\ChatLog.cs" />
     <Compile Include="ChatBots\RemoteControl.cs" />
-    <Compile Include="ChatBots\Script.cs" />
-    <Compile Include="ChatBots\ScriptScheduler.cs" />
     <Compile Include="ChatBot.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Commands\CommandHandler.cs" />
@@ -148,7 +146,7 @@
     <Compile Include="Net\Protocol\Handlers\SocketWrapper.cs" />
     <Compile Include="Net\Protocol\Session\SessionFileMonitor.cs" />
     <Compile Include="Net\ServerConnectionInfo.cs" />
-    <Compile Include="SessionValidation\ISessionValidator.cs" />
+    <Compile Include="Net\SessionValidation\ISessionValidator.cs" />
     <Compile Include="WinAPI\ConsoleIcon.cs" />
     <Compile Include="ConsoleIO.cs" />
     <Compile Include="Net\Crypto\Streams\BouncyAes\AesFastEngine.cs" />
@@ -169,7 +167,6 @@
     <Compile Include="Net\Crypto\Streams\MonoAesStream.cs" />
     <Compile Include="Net\Crypto\Streams\RegularAesStream.cs" />
     <Compile Include="Net\Crypto\CryptoHandler.cs" />
-    <Compile Include="CSharpRunner.cs" />
     <Compile Include="Json.cs" />
     <Compile Include="Mapping\Block.cs" />
     <Compile Include="Mapping\Chunk.cs" />
