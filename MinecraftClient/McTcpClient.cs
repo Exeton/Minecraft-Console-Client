@@ -23,8 +23,7 @@ namespace MinecraftClient
 
         private readonly Dictionary<Guid, string> onlinePlayers = new Dictionary<Guid, string>();
 
-        private readonly List<ChatBot> bots = new List<ChatBot>();
-        private static readonly List<ChatBot> botsOnHold = new List<ChatBot>();
+        private List<ChatBot> bots = new List<ChatBot>();
 
         private readonly Dictionary<string, List<ChatBot>> registeredBotPluginChannels = new Dictionary<string, List<ChatBot>>();
         private readonly List<string> registeredServerPluginChannels = new List<String>();
@@ -82,7 +81,7 @@ namespace MinecraftClient
             this.port = port;
             player = new Player(world, user, uuid);
 
-            if (botsOnHold.Count == 0)
+            if (bots.Count == 0)
             {
                 if (Settings.AntiAFK_Enabled) { BotLoad(new ChatBots.AntiAFK(Settings.AntiAFK_Delay)); }
                 if (Settings.Hangman_Enabled) { BotLoad(new ChatBots.HangmanGame(Settings.Hangman_English)); }
@@ -102,7 +101,7 @@ namespace MinecraftClient
                 client = ProxyHandler.newTcpClient(host, port);
                 client.ReceiveBufferSize = 1024 * 1024;
 
-                handler = Protocol.ProtocolHandler.GetProtocolHandler(client, protocolversion, forgeInfo, this, player);
+                handler = ProtocolHandler.GetProtocolHandler(client, protocolversion, forgeInfo, this, player);
                 player.SetHandler(handler);
 
 
@@ -112,9 +111,8 @@ namespace MinecraftClient
                 {
                     if (handler.Login())
                     {
-                        foreach (ChatBot bot in botsOnHold)
+                        foreach (ChatBot bot in bots)
                             BotLoad(bot, false);
-                        botsOnHold.Clear();
 
                         Console.WriteLine("Server was successfully joined.\nType '"
                             + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
@@ -191,7 +189,7 @@ namespace MinecraftClient
                             if (Settings.internalCmdChar == ' ' || text[0] == Settings.internalCmdChar)
                             {
                                 string command = Settings.internalCmdChar == ' ' ? text : text.Substring(1);
-                                CommandHandler commandHandler = null;
+                                CommandHandler commandHandler = Program.CommandHandler;
 
                                 if (!commandHandler.runCommand(command) && Settings.internalCmdChar == '/')
                                 {
@@ -212,9 +210,6 @@ namespace MinecraftClient
         /// </summary>
         public void Disconnect()
         {
-            botsOnHold.Clear();
-            botsOnHold.AddRange(bots);
-
             if (handler != null)
             {
                 handler.Disconnect();
@@ -236,7 +231,6 @@ namespace MinecraftClient
         public void BotLoad(ChatBot b, bool init = true)
         {
             b.SetHandler(this);
-            bots.Add(b);
             if (init)
                 b.Initialize();
             if (this.handler != null)

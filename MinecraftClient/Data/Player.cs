@@ -65,7 +65,6 @@ namespace MinecraftClient.Data
                 return path != null;
             }
         }
-
         public void OnUpdate()
         {
             if (McTcpClient.terrainAndMovementsEnabled && locationReceived)
@@ -138,12 +137,10 @@ namespace MinecraftClient.Data
             KeyValuePair<float, float> yawAndPitch = direction.GetYawAndPitch();
             UpdateLocation(location, yawAndPitch.Key, yawAndPitch.Value);
         }
-
         public bool GetInventoryEnabled()
         {
             return inventoryHandlingEnabled;
         }
-
         /// <summary>
         /// Enable or disable Inventories.
         /// Please note that Enabling will be deferred until next relog.
@@ -172,12 +169,10 @@ namespace MinecraftClient.Data
 
         public string GetUsername() { return username; }
         public string GetUserUUID() { return uuid; }
-
         public Inventory GetInventory()
         {
             return playerInventory;
         }
-
         public void OnJoin()
         {
             if (inventoryHandlingRequested)
@@ -187,7 +182,6 @@ namespace MinecraftClient.Data
                 ConsoleIO.WriteLogLine("Inventory handling is now enabled.");
             }
         }
-
         public void onInventoryOpen(Inventory inventory)
         {
             //TODO: Handle Inventory
@@ -196,7 +190,6 @@ namespace MinecraftClient.Data
                 Player.inventories.Add(inventory);
             }
         }
-
         public void onInventoryClose(byte inventoryID)
         {
             for (int i = 0; i < Player.inventories.Count; i++)
