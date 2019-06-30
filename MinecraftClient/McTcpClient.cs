@@ -5,7 +5,6 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading;
 using System.IO;
-using System.Net;
 using MinecraftClient.Protocol;
 using MinecraftClient.Proxy;
 using MinecraftClient.Protocol.Handlers.Forge;
@@ -637,16 +636,6 @@ namespace MinecraftClient
                     bot.OnPluginMessage(channel, data);
                 }
             }
-        }
-
-        public Location GetCurrentLocation()
-        {
-            return player.GetCurrentLocation();
-        }
-
-        public void UpdateLocation(Location location, float yaw, float pitch)
-        {
-            player.UpdateLocation(location, yaw, pitch);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Text.RegularExpressions;
+using MinecraftClient.Data;
 
 namespace MinecraftClient
 {
@@ -38,6 +39,7 @@ namespace MinecraftClient
         private List<string> registeredPluginChannels = new List<String>();
         private Queue<string> chatQueue = new Queue<string>();
         private DateTime lastMessageSentTime = DateTime.MinValue;
+
         private McTcpClient Handler
         {
             get
@@ -594,7 +596,7 @@ namespace MinecraftClient
         /// <returns>Minecraft world or null if associated setting is disabled</returns>
         protected Mapping.Location GetCurrentLocation()
         {
-            return Handler.GetCurrentLocation();
+            return Handler.player.GetCurrentLocation();
         }
 
         /// <summary>

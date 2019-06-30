@@ -38,13 +38,13 @@ namespace MinecraftClient.Commands
                 {
 
                     if (argStr == "get")
-                        return handler.GetCurrentLocation().ToString();
+                        return handler.player.GetCurrentLocation().ToString();
 
                     Direction direction = DirectionMethods.FromString(argStr);
 
-                    if (Movement.CanMove(handler.GetWorld(), handler.GetCurrentLocation(), direction))
+                    if (Movement.CanMove(handler.GetWorld(), handler.player.GetCurrentLocation(), direction))
                     {
-                        handler.player.MoveTo(Movement.Move(handler.GetCurrentLocation(), direction));
+                        handler.player.MoveTo(Movement.Move(handler.player.GetCurrentLocation(), direction));
                         return "Moving " + argStr + '.';
                     }
                     else return "Cannot move in that direction.";
