@@ -176,7 +176,7 @@ namespace MinecraftClient.ChatBots
             else
             {
                 LogToConsole("File not found: '" + matchesFile + "'");
-                UnloadBot(); //No need to keep the bot active
+                //UnloadBot(); //No need to keep the bot active
             }
         }
 

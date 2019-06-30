@@ -244,16 +244,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Load the provided ChatBot object
-        /// </summary>
-        /// <param name="bot">Bot to load</param>
-        new public void LoadBot(ChatBot bot)
-        {
-            base.LoadBot(bot);
-            tickHandler.WaitOne();
-        }
-
-        /// <summary>
         /// Return the list of currently online players
         /// </summary>
         /// <returns>List of online players</returns>

@@ -33,7 +33,6 @@ namespace MinecraftClient
         //Handler will be automatically set on bot loading, don't worry about this
         public void SetHandler(McTcpClient handler) { this._handler = handler; }
         protected void SetMaster(ChatBot master) { this.master = master; }
-        protected void LoadBot(ChatBot bot) { Handler.BotUnLoad(bot); Handler.BotLoad(bot); }
         private McTcpClient _handler = null;
         private ChatBot master = null;
         private List<string> registeredPluginChannels = new List<String>();
@@ -532,14 +531,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Unload the chatbot, and release associated memory.
-        /// </summary>
-        protected void UnloadBot()
-        {
-            Handler.BotUnLoad(this);
-        }
-
-        /// <summary>
         /// Send a private message to a player
         /// </summary>
         /// <param name="player">Player name</param>
@@ -556,7 +547,7 @@ namespace MinecraftClient
         /// <param name="playername">Player name to send error messages, if applicable</param>
         protected void RunScript(string filename, string playername = "")
         {
-            Handler.BotLoad(new ChatBots.Script(filename, playername));
+            //Handler.BotLoad(new ChatBots.Script(filename, playername));
         }
 
         /// <summary>

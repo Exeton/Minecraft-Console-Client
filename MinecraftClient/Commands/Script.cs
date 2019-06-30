@@ -23,7 +23,7 @@ namespace MinecraftClient.Commands
         {
             if (hasArg(command))
             {
-                tcpClientRetriever.GetTcpClient().BotLoad(new ChatBots.Script(argStr));
+                //tcpClientRetriever.GetTcpClient().BotLoad(new ChatBots.Script(argStr));
                 return "";
             }
             else return CMDDesc;

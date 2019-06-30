@@ -145,7 +145,7 @@ namespace MinecraftClient.ChatBots
                 if (owner != null)
                     SendPrivateMessage(owner, "File not found: '" + file + "'");
                 
-                UnloadBot(); //No need to keep the bot active
+                //UnloadBot(); //No need to keep the bot active
             }
         }
 
@@ -180,8 +180,8 @@ namespace MinecraftClient.ChatBots
                 {
                     tpause.Set();
                     tpause.Reset();
-                    if (!thread.IsAlive)
-                        UnloadBot();
+                    //if (!thread.IsAlive)
+                        //UnloadBot();
                 }
             }
             else //Classic MCC script interpreter
@@ -226,7 +226,7 @@ namespace MinecraftClient.ChatBots
                     else
                     {
                         //No more instructions to interpret
-                        UnloadBot();
+                        //UnloadBot();
                     }
                 }
             }

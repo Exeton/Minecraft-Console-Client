@@ -88,7 +88,7 @@ namespace MinecraftClient.ChatBots
             else
             {
                 LogToConsole("File not found: '" + tasksfile + "'");
-                UnloadBot(); //No need to keep the bot active
+                //UnloadBot(); //No need to keep the bot active
             }
         }
 

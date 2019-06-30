@@ -24,8 +24,6 @@ namespace MinecraftClient
 
         private readonly Dictionary<Guid, string> onlinePlayers = new Dictionary<Guid, string>();
 
-        private List<ChatBot> bots = new List<ChatBot>();
-
         private readonly Dictionary<string, List<ChatBot>> registeredBotPluginChannels = new Dictionary<string, List<ChatBot>>();
         private readonly List<string> registeredServerPluginChannels = new List<String>();
 
@@ -86,24 +84,7 @@ namespace MinecraftClient
             this.plugins = plugins;
             player = new Player(world, user, uuid);
 
-            if (bots.Count == 0)
-            {
-
-
-                if (true) { BotLoad(new ChatBots.AntiAFK(60)); }
-                //if (Settings.AntiAFK_Enabled) { BotLoad(new ChatBots.AntiAFK(Settings.AntiAFK_Delay)); }
-                if (Settings.Hangman_Enabled) { BotLoad(new ChatBots.HangmanGame(Settings.Hangman_English)); }
-                if (Settings.Alerts_Enabled) { BotLoad(new ChatBots.Alerts()); }
-                if (Settings.ChatLog_Enabled) { BotLoad(new ChatBots.ChatLog(Settings.ExpandVars(Settings.ChatLog_File), Settings.ChatLog_Filter, Settings.ChatLog_DateTime)); }
-                if (Settings.PlayerLog_Enabled) { BotLoad(new ChatBots.PlayerListLogger(Settings.PlayerLog_Delay, Settings.ExpandVars(Settings.PlayerLog_File))); }
-                if (Settings.AutoRelog_Enabled) { BotLoad(new ChatBots.AutoRelog(Settings.AutoRelog_Delay, Settings.AutoRelog_Retries)); }
-                if (Settings.ScriptScheduler_Enabled) { BotLoad(new ChatBots.ScriptScheduler(Settings.ExpandVars(Settings.ScriptScheduler_TasksFile))); }
-                if (Settings.RemoteCtrl_Enabled) { BotLoad(new ChatBots.RemoteControl()); }
-                if (Settings.AutoRespond_Enabled) { BotLoad(new ChatBots.AutoRespond(Settings.AutoRespond_Matches)); }
-                //Add your ChatBot here by uncommenting and adapting
-                //BotLoad(new ChatBots.YourBot());
-            }
-            
+           
             try
             {
                 client = ProxyHandler.newTcpClient(host, port);
@@ -119,12 +100,8 @@ namespace MinecraftClient
                 {
                     if (handler.Login())
                     {
-                        foreach (ChatBot bot in bots)
-                            bot.AfterGameJoined();
-
                         foreach (IPlugin plugin in plugins)
                             plugin.OnJoin();
-                        //BotLoad(bot, false);
 
                         Console.WriteLine("Server was successfully joined.\nType '"
                             + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
@@ -238,43 +215,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Load a new bot
-        /// </summary>
-        public void BotLoad(ChatBot b, bool init = true)
-        {
-            b.SetHandler(this);
-            if (init)
-                b.Initialize();
-            if (this.handler != null)
-                b.AfterGameJoined();
-
-            bots.Add(b);
-        }
-
-        /// <summary>
-        /// Unload a bot
-        /// </summary>
-        public void BotUnLoad(ChatBot b)
-        {
-            bots.RemoveAll(item => object.ReferenceEquals(item, b));
-
-            // ToList is needed to avoid an InvalidOperationException from modfiying the list while it's being iterated upon.
-            var botRegistrations = registeredBotPluginChannels.Where(entry => entry.Value.Contains(b)).ToList();
-            foreach (var entry in botRegistrations)
-            {
-                UnregisterPluginChannel(entry.Key, b);
-            }
-        }
-
-        /// <summary>
-        /// Clear bots
-        /// </summary>
-        public void BotClear()
-        {
-            bots.Clear();
-        }
-
-        /// <summary>
         /// Called when a server was successfully joined
         /// </summary>
         public void OnGameJoined()
@@ -290,8 +230,6 @@ namespace MinecraftClient
                     Settings.MCSettings_ChatColors,
                     Settings.MCSettings_Skin_All,
                     Settings.MCSettings_MainHand);
-            foreach (ChatBot bot in bots)
-                bot.AfterGameJoined();
             player.OnJoin();
         }
 
@@ -366,23 +304,6 @@ namespace MinecraftClient
             if (Settings.DisplayChatLinks)
                 foreach (string link in links)
                     ConsoleIO.WriteLineFormatted("§8MCC: Link: " + link, false);
-            foreach (ChatBot bot in bots.ToArray())
-            {
-                try
-                {
-                    bot.GetText(text);
-                    if (bots.Contains(bot))
-                        bot.GetText(text, json);
-                }
-                catch (Exception e)
-                {
-                    if (!(e is ThreadAbortException))
-                    {
-                        ConsoleIO.WriteLineFormatted("§8GetText: Got error from " + bot.ToString() + ": " + e.ToString());
-                    }
-                    else throw; //ThreadAbortException should not be caught
-                }
-            }
         }
 
         /// <summary>
@@ -412,9 +333,6 @@ namespace MinecraftClient
                     break;
             }
 
-            foreach (ChatBot bot in bots)
-                will_restart |= bot.OnDisconnect(reason, message);
-
             if (!will_restart)
                 Program.HandleFailure();
         }
@@ -424,30 +342,21 @@ namespace MinecraftClient
         /// </summary>
         public void OnUpdate()
         {
-            foreach (var bot in bots.ToArray())
+            foreach (IPlugin plugin in plugins)
             {
                 try
                 {
-                    bot.Update();
-                    bot.ProcessQueuedText();
+                    plugin.OnUpdate();
                 }
                 catch (Exception e)
                 {
-                    if (!(e is ThreadAbortException))
-                    {
-                        ConsoleIO.WriteLineFormatted("§8Update: Got error from " + bot.ToString() + ": " + e.ToString());
-                    }
-                    else throw; //ThreadAbortException should not be caught
+                    ConsoleIO.WriteLineFormatted("§8Update: Got error from " + plugin.ToString() + ": " + e.ToString());
+                    if (e is ThreadAbortException)
+                        throw;
                 }
             }
 
-            foreach (IPlugin plugin in plugins)
-            {
-                plugin.OnUpdate();
-            }
-
             player.OnUpdate();
-
         }
 
         /// <summary>
