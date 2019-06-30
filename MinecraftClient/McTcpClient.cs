@@ -26,31 +26,23 @@ namespace MinecraftClient
 
         private readonly List<ChatBot> bots = new List<ChatBot>();
         private static readonly List<ChatBot> botsOnHold = new List<ChatBot>();
-        private static List<Inventory> inventories = new List<Inventory>();
 
         private readonly Dictionary<string, List<ChatBot>> registeredBotPluginChannels = new Dictionary<string, List<ChatBot>>();
         private readonly List<string> registeredServerPluginChannels = new List<String>();
 
         public static bool terrainAndMovementsEnabled;
         public static bool terrainAndMovementsRequested = false;
-        private bool inventoryHandlingEnabled;
-        private bool inventoryHandlingRequested = false;
 
         public Player player;
-
         private World world = new World();
 
         private string host;
         private int port;
-        private string username;
-        private string uuid;
         private string sessionid;
-        private Inventory playerInventory;
 
         public int GetServerPort() { return port; }
         public string GetServerHost() { return host; }
-        public string GetUsername() { return username; }
-        public string GetUserUUID() { return uuid; }
+
         public string GetSessionID() { return sessionid; }
         public World GetWorld() { return world; }
 
@@ -84,14 +76,12 @@ namespace MinecraftClient
         private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo)
         {
             terrainAndMovementsEnabled = Settings.TerrainAndMovements;
-            inventoryHandlingEnabled = Settings.InventoryHandling;
 
             bool retry = false;
             this.sessionid = sessionID;
-            this.uuid = uuid;
-            this.username = user;
             this.host = server_ip;
             this.port = port;
+            player = new Player(world, user, uuid);
 
             if (botsOnHold.Count == 0)
             {
@@ -112,7 +102,11 @@ namespace MinecraftClient
             {
                 client = ProxyHandler.newTcpClient(host, port);
                 client.ReceiveBufferSize = 1024 * 1024;
-                handler = Protocol.ProtocolHandler.GetProtocolHandler(client, protocolversion, forgeInfo, this);
+
+                handler = Protocol.ProtocolHandler.GetProtocolHandler(client, protocolversion, forgeInfo, this, player);
+                player.SetHandler(handler);
+
+
                 Console.WriteLine("Version is supported.\nLogging in...");
 
                 try
@@ -166,8 +160,6 @@ namespace MinecraftClient
                     Program.HandleFailure();
                 }
             }
-
-            player = new Player(world, handler);
         }
 
         /// <summary>
@@ -293,12 +285,7 @@ namespace MinecraftClient
                     Settings.MCSettings_MainHand);
             foreach (ChatBot bot in bots)
                 bot.AfterGameJoined();
-            if (inventoryHandlingRequested)
-            {
-                inventoryHandlingRequested = false;
-                inventoryHandlingEnabled = true;
-                ConsoleIO.WriteLogLine("Inventory handling is now enabled.");
-            }
+            player.OnJoin();
         }
 
         /// <summary>
@@ -328,14 +315,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Get Inventory Handling Mode
-        /// </summary>
-        public bool GetInventoryEnabled()
-        {
-            return inventoryHandlingEnabled;
-        }
-
-        /// <summary>
         /// Enable or disable Terrain and Movements.
         /// Please note that Enabling will be deferred until next relog, respawn or world change.
         /// </summary>
@@ -357,32 +336,6 @@ namespace MinecraftClient
                 terrainAndMovementsRequested = false;
                 player.locationReceived = false;
                 world.Clear();
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Enable or disable Inventories.
-        /// Please note that Enabling will be deferred until next relog.
-        /// </summary>
-        /// <param name="enabled">Enabled</param>
-        /// <returns>TRUE if the setting was applied immediately, FALSE if delayed.</returns>
-        public bool SetInventoryEnabled(bool enabled)
-        {
-            if (enabled)
-            {
-                if (!inventoryHandlingEnabled)
-                {
-                    inventoryHandlingRequested = true;
-                    return false;
-                }
-            }
-            else
-            {
-                inventoryHandlingEnabled = false;
-                inventoryHandlingRequested = false;
-                inventories.Clear();
-                playerInventory = null;
             }
             return true;
         }
@@ -421,37 +374,6 @@ namespace MinecraftClient
                         ConsoleIO.WriteLineFormatted("§8GetText: Got error from " + bot.ToString() + ": " + e.ToString());
                     }
                     else throw; //ThreadAbortException should not be caught
-                }
-            }
-        }
-
-        /// <summary>
-        /// When an inventory is opened
-        /// </summary>
-        /// <param name="inventory">Location to reach</param>
-        public void onInventoryOpen(Inventory inventory)
-        {
-            //TODO: Handle Inventory
-            if (!inventories.Contains(inventory))
-            {
-                inventories.Add(inventory);
-            }
-        }
-
-        /// <summary>
-        /// When an inventory is close
-        /// </summary>
-        /// <param name="inventoryID">Location to reach</param>
-        public void onInventoryClose(byte inventoryID)
-        {
-            for (int i = 0; i < inventories.Count; i++)
-            {
-                Inventory inventory = inventories[i];
-                if (inventory == null) continue;
-                if (inventory.id == inventoryID)
-                {
-                    inventories.Remove(inventory);
-                    return;
                 }
             }
         }

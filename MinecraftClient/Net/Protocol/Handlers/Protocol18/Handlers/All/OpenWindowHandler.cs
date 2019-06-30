@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftClient.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,17 +8,17 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class OpenWindowHandler : IPacketHandler
     {
-        IMinecraftComHandler handler;
+        Player player;
         DataTypes dataTypes;
-        public OpenWindowHandler(IMinecraftComHandler handler, DataTypes dataTypes)
+        public OpenWindowHandler(Player player, DataTypes dataTypes)
         {
-            this.handler = handler;
+            this.player = player;
             this.dataTypes = dataTypes;
         }
 
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            if (handler.GetInventoryEnabled())
+            if (player.GetInventoryEnabled())
             {
                 byte windowID = dataTypes.ReadNextByte(packetData);
                 string type = dataTypes.ReadNextString(packetData).Replace("minecraft:", "").ToUpper();
@@ -26,7 +27,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
                 byte slots = dataTypes.ReadNextByte(packetData);
                 Inventory inventory = new Inventory(windowID, inventoryType, title, slots);
 
-                handler.onInventoryOpen(inventory);
+                player.onInventoryOpen(inventory);
             }
             return true;
         }

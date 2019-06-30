@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftClient.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,17 +9,17 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
     class WindowItemsHandler : IPacketHandler
     {
 
-        IMinecraftComHandler handler;
+        Player player;
         DataTypes dataTypes;
-        public WindowItemsHandler(IMinecraftComHandler handler, DataTypes dataTypes)
+        public WindowItemsHandler(Player player, DataTypes dataTypes)
         {
-            this.handler = handler;
+            this.player = player;
             this.dataTypes = dataTypes;
         }
 
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            if (handler.GetInventoryEnabled())
+            if (player.GetInventoryEnabled())
             {
                 byte id = dataTypes.ReadNextByte(packetData);
                 short elements = dataTypes.ReadNextShort(packetData);

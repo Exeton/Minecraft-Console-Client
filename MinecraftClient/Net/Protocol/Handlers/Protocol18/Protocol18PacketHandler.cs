@@ -1,4 +1,5 @@
-﻿using MinecraftClient.Mapping;
+﻿using MinecraftClient.Data;
+using MinecraftClient.Mapping;
 using MinecraftClient.Protocol.Handlers.Protocol18.Handlers;
 using MinecraftClient.Protocol.Handlers.Protocol18.Handlers._17Terrain;
 using System;
@@ -14,7 +15,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18
     {
         int protocolversion;
         Dictionary<PacketIncomingType, IPacketHandler> packetHandlers = new Dictionary<PacketIncomingType, IPacketHandler>();
-        public Protocol18PacketHandler(int protocolVersion, DataTypes dataTypes, IMinecraftComHandler handler, IPacketReadWriter packetSender, Protocol18Terrain pTerrain, Protocol18Forge pForge, WorldInfo worldInfo, Protocol18Handler protocol18Handler)
+        public Protocol18PacketHandler(int protocolVersion, DataTypes dataTypes, IMinecraftComHandler handler, IPacketReadWriter packetSender, Protocol18Terrain pTerrain, Protocol18Forge pForge, WorldInfo worldInfo, Protocol18Handler protocol18Handler, Player player)
         {
             this.protocolversion = protocolVersion;
 
@@ -28,7 +29,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18
             packetHandlers.Add(PacketIncomingType.JoinGame, new JoinGameHandler(handler, dataTypes, worldInfo, protocolVersion));
             packetHandlers.Add(PacketIncomingType.ChatMessage, new ChatMessageHandler(handler, dataTypes));
             packetHandlers.Add(PacketIncomingType.Respawn, new RespawnHandler(handler, dataTypes, worldInfo, protocolVersion));
-            packetHandlers.Add(PacketIncomingType.PlayerPositionAndLook, new PlayerPositionAndLookHandler(packetSender, dataTypes, handler, protocolVersion));
+            packetHandlers.Add(PacketIncomingType.PlayerPositionAndLook, new PlayerPositionAndLookHandler(packetSender, dataTypes, handler, player, protocolVersion));
             packetHandlers.Add(PacketIncomingType.ChunkData, new ChunkDataHandler(handler, dataTypes, pTerrain, worldInfo, protocolVersion));
             packetHandlers.Add(PacketIncomingType.MultiBlockChange, new MultiBlockChangeHandler(handler, dataTypes, protocolVersion));
 
@@ -39,9 +40,9 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18
             packetHandlers.Add(PacketIncomingType.PluginMessage, new PluginMessageHandler(handler, dataTypes, pForge, worldInfo, protocolVersion));
             packetHandlers.Add(PacketIncomingType.KickPacket, new KickHandler(handler, dataTypes));
             packetHandlers.Add(PacketIncomingType.NetworkCompressionTreshold, new NetworkCompressionThresholdHandler(handler, dataTypes, protocol18Handler, protocolVersion));
-            packetHandlers.Add(PacketIncomingType.OpenWindow, new OpenWindowHandler(handler, dataTypes));
-            packetHandlers.Add(PacketIncomingType.CloseWindow, new CloseWindowHandler(handler, dataTypes));
-            packetHandlers.Add(PacketIncomingType.WindowItems, new WindowItemsHandler(handler, dataTypes));
+            packetHandlers.Add(PacketIncomingType.OpenWindow, new OpenWindowHandler(player, dataTypes));
+            packetHandlers.Add(PacketIncomingType.CloseWindow, new CloseWindowHandler(dataTypes, player));
+            packetHandlers.Add(PacketIncomingType.WindowItems, new WindowItemsHandler(player, dataTypes));
             packetHandlers.Add(PacketIncomingType.ResourcePackSend, new ResourecePackSendHandler(dataTypes, packetSender, protocolVersion));
         }
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)

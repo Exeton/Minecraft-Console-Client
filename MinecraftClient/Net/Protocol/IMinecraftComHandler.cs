@@ -19,17 +19,12 @@ namespace MinecraftClient.Protocol
 
         int GetServerPort();
         string GetServerHost();
-        string GetUsername();
-        string GetUserUUID();
         string GetSessionID();
         string[] GetOnlinePlayers();
         Dictionary<string, string> GetOnlinePlayersWithUUID();
-        Location GetCurrentLocation();
         World GetWorld();
         bool GetTerrainEnabled();
         bool SetTerrainEnabled(bool enabled);
-        bool GetInventoryEnabled();
-        bool SetInventoryEnabled(bool enabled);
 
         /// <summary>
         /// Called when a server was successfully joined
@@ -42,16 +37,6 @@ namespace MinecraftClient.Protocol
         /// <param name="text">Text received from the server</param>
         /// <param name="isJson">TRUE if the text is JSON-Encoded</param>
         void OnTextReceived(string text, bool isJson);
-
-        /// <summary>
-        /// Called when an inventory is opened
-        /// </summary>
-        void onInventoryOpen(Inventory inventory);
-
-        /// <summary>
-        /// Called when an inventory is closed
-        /// </summary>
-        void onInventoryClose(byte inventoryID);
 
         /// <summary>
         /// Called when the player respawns, which happens on login, respawn and world change.
@@ -70,14 +55,6 @@ namespace MinecraftClient.Protocol
         /// </summary>
         /// <param name="uuid">UUID of the player</param>
         void OnPlayerLeave(Guid uuid);
-
-        /// <summary>
-        /// Called when the server sets the new location for the player
-        /// </summary>
-        /// <param name="location">New location of the player</param>
-        /// <param name="yaw">New yaw</param>
-        /// <param name="pitch">New pitch</param>
-        void UpdateLocation(Location location, float yaw, float pitch);
 
         /// <summary>
         /// This method is called when the connection has been lost

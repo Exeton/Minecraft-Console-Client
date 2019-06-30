@@ -11,6 +11,7 @@ using MinecraftClient.Mapping;
 using MinecraftClient.Mapping.BlockPalettes;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Protocol.Handlers.Protocol18;
+using MinecraftClient.Data;
 
 namespace MinecraftClient.Protocol.Handlers
 {
@@ -39,12 +40,16 @@ namespace MinecraftClient.Protocol.Handlers
         public ConnectionInfo connectionInfo;
         DataTypes dataTypes;
         Thread netRead;
+        Player player;
 
         IPacketReadWriter packetReadWriter;
         IPacketHandler packetHandler;
 
-        public Protocol18Handler(TcpClient Client, int protocolVersion, IMinecraftComHandler handler, ForgeInfo forgeInfo)
+        public Protocol18Handler(TcpClient Client, int protocolVersion, IMinecraftComHandler handler, ForgeInfo forgeInfo, Player player)
         {
+
+            this.player = player;
+
             ConsoleIO.SetAutoCompleteEngine(this);
             ChatParser.InitTranslations();
 
@@ -61,10 +66,10 @@ namespace MinecraftClient.Protocol.Handlers
                 handler.SetTerrainEnabled(false);
             }
 
-            if (handler.GetInventoryEnabled() && protocolversion > (int)McVersion.V114)
+            if (player.GetInventoryEnabled() && protocolversion > (int)McVersion.V114)
             {
                 ConsoleIO.WriteLineFormatted("§8Inventories are currently not handled for that MC version.");
-                handler.SetInventoryEnabled(false);
+                player.SetInventoryEnabled(false);
             }
 
             if (protocolversion >= (int)McVersion.V18)
@@ -78,7 +83,7 @@ namespace MinecraftClient.Protocol.Handlers
             else Block.Palette = new Palette112();
 
             packetReadWriter = new Protocol18PacketReadWriter(connectionInfo, dataTypes, protocolVersion);
-            packetHandler = new Protocol18PacketHandler(protocolVersion, dataTypes, handler, packetReadWriter, pTerrain, pForge, worldInfo, this);
+            packetHandler = new Protocol18PacketHandler(protocolVersion, dataTypes, handler, packetReadWriter, pTerrain, pForge, worldInfo, this, player);
 
             pForge.packetReadWriter = packetReadWriter;
         }
@@ -206,7 +211,7 @@ namespace MinecraftClient.Protocol.Handlers
 
             packetReadWriter.WritePacket(0x00, handshake_packet);
 
-            byte[] login_packet = dataTypes.GetString(handler.GetUsername());
+            byte[] login_packet = dataTypes.GetString(player.GetUsername());
 
             packetReadWriter.WritePacket(0x00, login_packet);
 
@@ -223,7 +228,7 @@ namespace MinecraftClient.Protocol.Handlers
                     string serverID = dataTypes.ReadNextString(packet.data);
                     byte[] Serverkey = dataTypes.ReadNextByteArray(packet.data);
                     byte[] token = dataTypes.ReadNextByteArray(packet.data);
-                    return StartEncryption(handler.GetUserUUID(), handler.GetSessionID(), token, serverID, Serverkey);
+                    return StartEncryption(player.GetUserUUID(), handler.GetSessionID(), token, serverID, Serverkey);
                 }
                 else if (packet.id == 0x02) //Login successful
                 {

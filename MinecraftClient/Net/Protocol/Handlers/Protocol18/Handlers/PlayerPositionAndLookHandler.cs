@@ -1,4 +1,5 @@
-﻿using MinecraftClient.Mapping;
+﻿using MinecraftClient.Data;
+using MinecraftClient.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +14,13 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
         IPacketReadWriter packetSender;
         IMinecraftComHandler handler;
         int protocolversion;
-        public PlayerPositionAndLookHandler(IPacketReadWriter packetSender, DataTypes dataTypes, IMinecraftComHandler handler, int protocolversion)
+        Player player;
+        public PlayerPositionAndLookHandler(IPacketReadWriter packetSender, DataTypes dataTypes, IMinecraftComHandler handler, Player player, int protocolversion)
         {
             this.dataTypes = dataTypes;
             this.packetSender = packetSender;
             this.handler = handler;
+            this.player = player;
             this.protocolversion = protocolversion;
         }
 
@@ -34,13 +37,13 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 
                 if (protocolversion >= (int)McVersion.V18)
                 {
-                    Location location = handler.GetCurrentLocation();
+                    Location location = player.GetCurrentLocation();
                     location.X = (locMask & 1 << 0) != 0 ? location.X + x : x;
                     location.Y = (locMask & 1 << 1) != 0 ? location.Y + y : y;
                     location.Z = (locMask & 1 << 2) != 0 ? location.Z + z : z;
-                    handler.UpdateLocation(location, yaw, pitch);
+                    player.UpdateLocation(location, yaw, pitch);
                 }
-                else handler.UpdateLocation(new Location(x, y, z), yaw, pitch);
+                else player.UpdateLocation(new Location(x, y, z), yaw, pitch);
             }
 
             if (protocolversion >= (int)McVersion.V19)

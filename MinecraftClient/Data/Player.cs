@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MinecraftClient.Data
 {
-    public class Player
+    public class Player : IPlayer
     {
         public int dimension;
         public object locationLock = new object();
@@ -17,16 +17,31 @@ namespace MinecraftClient.Data
         public bool locationReceived = false;
         World world;
 
+        private string username;
+        private string uuid;
+
+        public static List<Inventory> inventories = new List<Inventory>();
+        private Inventory playerInventory;
+        private bool inventoryHandlingEnabled;
+        private bool inventoryHandlingRequested = false;
+
         private double motionY;
         //Refactor into player controler class
         private Queue<Location> steps;
         private Queue<Location> path;
-
         IMinecraftCom handler;
 
-        public Player(World world, IMinecraftCom handler)
+        public void SetHandler(IMinecraftCom handler)
+        {
+            this.handler = handler;
+        }
+
+        public Player(World world, String username, string uuid)
         {
             this.world = world;
+            this.username = username;
+            this.uuid = uuid;
+            inventoryHandlingEnabled = Settings.InventoryHandling;
         }
 
         public Location GetCurrentLocation()
@@ -122,6 +137,78 @@ namespace MinecraftClient.Data
         {
             KeyValuePair<float, float> yawAndPitch = direction.GetYawAndPitch();
             UpdateLocation(location, yawAndPitch.Key, yawAndPitch.Value);
+        }
+
+        public bool GetInventoryEnabled()
+        {
+            return inventoryHandlingEnabled;
+        }
+
+        /// <summary>
+        /// Enable or disable Inventories.
+        /// Please note that Enabling will be deferred until next relog.
+        /// </summary>
+        /// <param name="enabled">Enabled</param>
+        /// <returns>TRUE if the setting was applied immediately, FALSE if delayed.</returns>
+        public void SetInventoryEnabled(bool enabled)
+        {
+            if (enabled)
+            {
+                if (!inventoryHandlingEnabled)
+                {
+                    inventoryHandlingRequested = true;
+                    //Delayed?
+                }
+            }
+            else
+            {
+                inventoryHandlingEnabled = false;
+                inventoryHandlingRequested = false;
+                inventories.Clear();
+                playerInventory = null;
+            }
+            //Not delayed
+        }
+
+        public string GetUsername() { return username; }
+        public string GetUserUUID() { return uuid; }
+
+        public Inventory GetInventory()
+        {
+            return playerInventory;
+        }
+
+        public void OnJoin()
+        {
+            if (inventoryHandlingRequested)
+            {
+                inventoryHandlingRequested = false;
+                inventoryHandlingEnabled = true;
+                ConsoleIO.WriteLogLine("Inventory handling is now enabled.");
+            }
+        }
+
+        public void onInventoryOpen(Inventory inventory)
+        {
+            //TODO: Handle Inventory
+            if (!Player.inventories.Contains(inventory))
+            {
+                Player.inventories.Add(inventory);
+            }
+        }
+
+        public void onInventoryClose(byte inventoryID)
+        {
+            for (int i = 0; i < Player.inventories.Count; i++)
+            {
+                Inventory inventory = Player.inventories[i];
+                if (inventory == null) continue;
+                if (inventory.id == inventoryID)
+                {
+                    Player.inventories.Remove(inventory);
+                    return;
+                }
+            }
         }
     }
 }

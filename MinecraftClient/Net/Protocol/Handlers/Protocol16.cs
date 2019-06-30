@@ -8,6 +8,7 @@ using MinecraftClient.Crypto;
 using MinecraftClient.Proxy;
 using System.Security.Cryptography;
 using MinecraftClient.Mapping;
+using MinecraftClient.Data;
 
 namespace MinecraftClient.Protocol.Handlers
 {
@@ -17,6 +18,7 @@ namespace MinecraftClient.Protocol.Handlers
 
     class Protocol16Handler : IMinecraftCom
     {
+        IPlayer player = null;
         IMinecraftComHandler handler;
         private bool autocomplete_received = false;
         private string autocomplete_result = "";
@@ -511,7 +513,9 @@ namespace MinecraftClient.Protocol.Handlers
 
         public bool Login()
         {
-            if (Handshake(handler.GetUserUUID(), handler.GetUsername(), handler.GetSessionID(), handler.GetServerHost(), handler.GetServerPort()))
+
+            //IPlayer not yet implemented
+            if (Handshake(player.GetUserUUID(), player.GetUsername(), handler.GetSessionID(), handler.GetServerHost(), handler.GetServerPort()))
             {
                 Send(new byte[] { 0xCD, 0 });
                 try
