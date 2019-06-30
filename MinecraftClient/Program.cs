@@ -9,6 +9,8 @@ using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Protocol.Session;
 using MinecraftClient.WinAPI;
 using MinecraftClient.Commands;
+using MinecraftClient.API;
+using System.IO;
 
 namespace MinecraftClient
 {
@@ -168,7 +170,11 @@ namespace MinecraftClient
             ProtocolHandler.LoginResult loginResult = tryAuthenticateSession(session);
 
             if (loginResult == ProtocolHandler.LoginResult.Success)
-                startTcpClient(session);
+            {
+                string rootDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                List<IPlugin> plugins = PluginLoader.LoadPlugins(rootDir + "/plugins");
+                startTcpClient(session, plugins);
+            }
             else
                 handleLoginFailure(loginResult);
         }
@@ -205,7 +211,7 @@ namespace MinecraftClient
             
             return ProtocolHandler.LoginResult.LoginRequired;
         }
-        static void startTcpClient(SessionToken session)
+        static void startTcpClient(SessionToken session, List<IPlugin> plugins)
         {
             Settings.Username = session.PlayerName;
 
@@ -261,7 +267,7 @@ namespace MinecraftClient
             {
                 try
                 {
-                    Client = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, forgeInfo, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort);
+                    Client = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, forgeInfo, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, plugins);
 
                     //Update console title
                     if (Settings.ConsoleTitle != "")

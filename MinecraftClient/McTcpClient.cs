@@ -11,6 +11,7 @@ using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Mapping;
 using MinecraftClient.Commands;
 using MinecraftClient.Data;
+using MinecraftClient.API;
 
 namespace MinecraftClient
 {
@@ -38,6 +39,9 @@ namespace MinecraftClient
         private int port;
         private string sessionid;
 
+
+        List<IPlugin> plugins;
+
         public int GetServerPort() { return port; }
         public string GetServerHost() { return host; }
 
@@ -57,9 +61,9 @@ namespace MinecraftClient
         /// <param name="server_ip">The server IP</param>
         /// <param name="port">The server port to use</param>
         /// <param name="protocolversion">Minecraft protocol version to use</param>
-        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, ForgeInfo forgeInfo, string server_ip, ushort port)
+        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, ForgeInfo forgeInfo, string server_ip, ushort port, List<IPlugin> plugins)
         {
-            StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo);
+            StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo, plugins);
         }
 
         /// <summary>
@@ -71,7 +75,7 @@ namespace MinecraftClient
         /// <param name="port">The server port to use</param>
         /// <param name="protocolversion">Minecraft protocol version to use</param>
         /// <param name="uuid">The player's UUID for online-mode authentication</param>
-        private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo)
+        private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo, List<IPlugin> plugins)
         {
             terrainAndMovementsEnabled = Settings.TerrainAndMovements;
 
@@ -79,11 +83,15 @@ namespace MinecraftClient
             this.sessionid = sessionID;
             this.host = server_ip;
             this.port = port;
+            this.plugins = plugins;
             player = new Player(world, user, uuid);
 
             if (bots.Count == 0)
             {
-                if (Settings.AntiAFK_Enabled) { BotLoad(new ChatBots.AntiAFK(Settings.AntiAFK_Delay)); }
+
+
+                if (true) { BotLoad(new ChatBots.AntiAFK(60)); }
+                //if (Settings.AntiAFK_Enabled) { BotLoad(new ChatBots.AntiAFK(Settings.AntiAFK_Delay)); }
                 if (Settings.Hangman_Enabled) { BotLoad(new ChatBots.HangmanGame(Settings.Hangman_English)); }
                 if (Settings.Alerts_Enabled) { BotLoad(new ChatBots.Alerts()); }
                 if (Settings.ChatLog_Enabled) { BotLoad(new ChatBots.ChatLog(Settings.ExpandVars(Settings.ChatLog_File), Settings.ChatLog_Filter, Settings.ChatLog_DateTime)); }
@@ -112,7 +120,11 @@ namespace MinecraftClient
                     if (handler.Login())
                     {
                         foreach (ChatBot bot in bots)
-                            BotLoad(bot, false);
+                            bot.AfterGameJoined();
+
+                        foreach (IPlugin plugin in plugins)
+                            plugin.OnJoin();
+                        //BotLoad(bot, false);
 
                         Console.WriteLine("Server was successfully joined.\nType '"
                             + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
@@ -235,6 +247,8 @@ namespace MinecraftClient
                 b.Initialize();
             if (this.handler != null)
                 b.AfterGameJoined();
+
+            bots.Add(b);
         }
 
         /// <summary>
@@ -425,6 +439,11 @@ namespace MinecraftClient
                     }
                     else throw; //ThreadAbortException should not be caught
                 }
+            }
+
+            foreach (IPlugin plugin in plugins)
+            {
+                plugin.OnUpdate();
             }
 
             player.OnUpdate();
