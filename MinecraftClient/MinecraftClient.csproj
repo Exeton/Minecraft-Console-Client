@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\CCAPI.cs" />
     <Compile Include="API\IPlugin.cs" />
     <Compile Include="API\PluginLoader.cs" />
     <Compile Include="AutoTimeout.cs" />
@@ -80,12 +81,9 @@
     <Compile Include="ChatBots\AutoRespond.cs" />
     <Compile Include="ChatBots\AutoRelog.cs" />
     <Compile Include="ChatBots\ChatLog.cs" />
-    <Compile Include="ChatBots\HangmanGame.cs" />
-    <Compile Include="ChatBots\PlayerListLogger.cs" />
     <Compile Include="ChatBots\RemoteControl.cs" />
     <Compile Include="ChatBots\Script.cs" />
     <Compile Include="ChatBots\ScriptScheduler.cs" />
-    <Compile Include="ChatBots\TestBot.cs" />
     <Compile Include="ChatBot.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Commands\CommandHandler.cs" />

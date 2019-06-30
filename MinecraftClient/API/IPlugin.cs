@@ -8,6 +8,10 @@ namespace MinecraftClient.API
     public interface IPlugin
     {
         void OnJoin();
+
+        /// <summary>
+        /// Runs 10 times per second
+        /// </summary>
         void OnUpdate();
     }
 }

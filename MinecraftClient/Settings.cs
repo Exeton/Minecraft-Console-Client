@@ -95,11 +95,6 @@ namespace MinecraftClient
         public static bool ResolveSrvRecords = true;
         public static bool ResolveSrvRecordsShortTimeout = true;
 
-        //AntiAFK Settings
-        public static bool AntiAFK_Enabled = true;
-        public static int AntiAFK_Delay = 600;
-        public static string AntiAFK_Command = "/ping";
-
         //Hangman Settings
         public static bool Hangman_Enabled = false;
         public static bool Hangman_English = true;
