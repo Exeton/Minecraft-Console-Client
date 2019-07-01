@@ -108,10 +108,6 @@ namespace MinecraftClient.Protocol.Handlers
             handler.OnConnectionLost(ChatBot.DisconnectReason.ConnectionLost, "");
         }
 
-        /// <summary>
-        /// Read data from the network. Should be called on a separate thread.
-        /// </summary>
-        /// <returns>FALSE if an error occured, TRUE otherwise.</returns>
         private bool Update()
         {
             handler.OnUpdate();

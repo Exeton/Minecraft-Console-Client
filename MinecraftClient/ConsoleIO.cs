@@ -154,9 +154,9 @@ namespace MinecraftClient
                     int hour = DateTime.Now.Hour, minute = DateTime.Now.Minute, second = DateTime.Now.Second;
                     ConsoleIO.Write(String.Format("{0}:{1}:{2} ", hour.ToString("00"), minute.ToString("00"), second.ToString("00")));
                 }
-                
-                Console.WriteLine(str);
-                return;
+
+                //Console.WriteLine(str);
+                //return;
 
                 string[] parts = str.Split(new char[] { '§' });
                 if (parts[0].Length > 0)
