@@ -411,7 +411,7 @@ namespace MinecraftClient
         /// </summary>
         protected void DisconnectAndExit()
         {
-            Program.Exit();
+            Program.DisconnectAndExit();
         }
 
         /// <summary>

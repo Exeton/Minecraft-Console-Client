@@ -14,29 +14,13 @@ namespace MinecraftClient
 
     public abstract class Command
     {
-        /// <summary>
-        /// The command name
-        /// </summary>
 
         public abstract string CMDName { get; }
 
-        /// <summary>
-        /// Usage message, eg: 'name [args]: do something'
-        /// </summary>
-
         public abstract string CMDDesc { get; }
 
-        /// <summary>
-        /// Perform the command
-        /// </summary>
-        /// <param name="command">The full command, eg: 'mycommand arg1 arg2'</param>
-        /// <returns>A confirmation/error message, or "" if no message</returns>
 
         public abstract string Run(string command, string[] args, string argStr);
-
-        /// <summary>
-        /// Check if at least one argument has been passed to the command
-        /// </summary>
 
         public static bool hasArg(string command)
         {

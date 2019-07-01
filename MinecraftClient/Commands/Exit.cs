@@ -12,7 +12,7 @@ namespace MinecraftClient.Commands
 
         public override string Run(string command, string[] args, string argStr)
         {
-            Program.Exit();
+            Program.DisconnectAndExit();
             return "";
         }
     }

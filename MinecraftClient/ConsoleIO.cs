@@ -39,10 +39,6 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Set an auto-completion engine for TAB autocompletion.
-        /// </summary>
-        /// <param name="engine">Engine implementing the IAutoComplete interface</param>
         public static void SetAutoCompleteEngine(IAutoComplete engine)
         {
             autocomplete_engine = engine;
@@ -53,14 +49,8 @@ namespace MinecraftClient
         /// </summary>
         public static bool EnableTimestamps = false;
 
-        /// <summary>
-        /// Specify a generic log line prefix for WriteLogLine()
-        /// </summary>
         public static string LogPrefix = "§8[Log] ";
 
-        /// <summary>
-        /// Read a password from the standard input
-        /// </summary>
         public static string ReadPassword()
         {
             StringBuilder password = new StringBuilder();
@@ -103,9 +93,6 @@ namespace MinecraftClient
             return password.ToString();
         }
 
-        /// <summary>
-        /// Read a line from the standard input
-        /// </summary>
         public static string ReadLine()
         {
            return Console.ReadLine();
@@ -124,25 +111,16 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Write a string to the standard output, without newline character
-        /// </summary>
         public static void Write(string text)
         {
             Console.Write(text);
         }
 
-        /// <summary>
-        /// Write a string to the standard output with a trailing newline
-        /// </summary>
         public static void WriteLine(string line)
         {
             Write(line + '\n');
         }
 
-        /// <summary>
-        /// Write a single character to the standard output
-        /// </summary>
         public static void Write(char c)
         {
             Write("" + c);
@@ -221,10 +199,6 @@ namespace MinecraftClient
             ConsoleIO.Write('\n');
         }
 
-        /// <summary>
-        /// Write a prefixed log line. Prefix is set in LogPrefix.
-        /// </summary>
-        /// <param name="text">Text of the log line</param>
         public static void WriteLogLine(string text)
         {
             WriteLineFormatted(LogPrefix + text);
@@ -371,10 +345,7 @@ namespace MinecraftClient
         #endregion
     }
 
-    /// <summary>
-    /// Interface for TAB autocompletion
-    /// Allows to use any object which has an AutoComplete() method using the IAutocomplete interface
-    /// </summary>
+
     public interface IAutoComplete
     {
         /// <summary>

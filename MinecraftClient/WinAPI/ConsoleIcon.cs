@@ -21,10 +21,6 @@ namespace MinecraftClient.WinAPI
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleIcon(IntPtr hIcon);
 
-        /// <summary>
-        /// Asynchronously download the player's skin and set the head as console icon
-        /// </summary>
-
         public static void setPlayerIconAsync(string playerName)
         {
             if (!Program.isUsingMono) //Windows Only
@@ -59,11 +55,6 @@ namespace MinecraftClient.WinAPI
                 t.Start();
             }
         }
-
-        /// <summary>
-        /// Set the icon back to the default CMD icon
-        /// </summary>
-
         public static void revertToCMDIcon()
         {
             if (!Program.isUsingMono) //Windows Only

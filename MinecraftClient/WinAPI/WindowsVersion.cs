@@ -14,9 +14,6 @@ namespace MinecraftClient.WinAPI
     /// </seealso>
     class WindowsVersion
     {
-        /// <summary>
-        /// Returns the Windows major version number for this computer.
-        /// </summary>
         public static uint WinMajorVersion
         {
             get
@@ -41,9 +38,6 @@ namespace MinecraftClient.WinAPI
             }
         }
 
-        /// <summary>
-        /// Returns the Windows minor version number for this computer.
-        /// </summary>
         public static uint WinMinorVersion
         {
             get
@@ -68,14 +62,6 @@ namespace MinecraftClient.WinAPI
                 return uint.TryParse(versionParts[1], out minorAsUInt) ? minorAsUInt : 0;
             }
         }
-
-        /// <summary>
-        /// Try retrieving a registry key
-        /// </summary>
-        /// <param name="path">key path</param>
-        /// <param name="key">Key</param>
-        /// <param name="value">Value (output)</param>
-        /// <returns>TRUE if successfully retrieved</returns>
         private static bool TryGetRegistryKey(string path, string key, out dynamic value)
         {
             value = null;

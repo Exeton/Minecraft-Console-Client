@@ -41,9 +41,6 @@ namespace MinecraftClient
         private static Thread offlinePrompt = null;
         private static bool useMcVersionOnce = false;
 
-        /// <summary>
-        /// The main entry point of Minecraft Console Client
-        /// </summary>
         static void Main(string[] args)
         {
             Console.WriteLine("Console Client for MC {0} to {1} - v{2} - By ORelio & Contributors", MCLowestVersion, MCHighestVersion, Version);
@@ -107,9 +104,6 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Reduest user to submit password.
-        /// </summary>
         private static void RequestPassword()
         {
             Console.Write("Password : ");
@@ -117,9 +111,6 @@ namespace MinecraftClient
             if (Settings.Password == "") { Settings.Password = "-"; }
         }
 
-        /// <summary>
-        /// Start a new Client
-        /// </summary>
         private static void InitializeClient()
         {
             SessionToken session = new SessionToken();
@@ -258,10 +249,7 @@ namespace MinecraftClient
             
         }
 
-        /// <summary>
-        /// Disconnect the current client from the server and exit the app
-        /// </summary>
-        public static void Exit()
+        public static void DisconnectAndExit()
         {
             new Thread(new ThreadStart(delegate
             {
@@ -276,9 +264,6 @@ namespace MinecraftClient
         /// Handle fatal errors such as ping failure, login failure, server disconnection, and so on.
         /// Allows AutoRelog to perform on fatal errors, prompt for server version, and offline commands.
         /// </summary>
-        /// <param name="errorMessage">Error message to display and optionally pass to AutoRelog bot</param>
-        /// <param name="versionError">Specify if the error is related to an incompatible or unkown server version</param>
-        /// <param name="disconnectReason">If set, the error message will be processed by the AutoRelog bot</param>
         public static void HandleFailure(string errorMessage = null, bool versionError = false, DisconnectReason? disconnectReason = null)
         {
             if (!String.IsNullOrEmpty(errorMessage))
@@ -315,12 +300,9 @@ namespace MinecraftClient
                     offlinePrompt.Start();
                 }
             }
-            else Exit();
+            else DisconnectAndExit();
         }
 
-        /// <summary>
-        /// Detect if the user is running Minecraft Console Client through Mono
-        /// </summary>
         public static bool isUsingMono
         {
             get
@@ -329,12 +311,6 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Enumerate types in namespace through reflection
-        /// </summary>
-        /// <param name="nameSpace">Namespace to process</param>
-        /// <param name="assembly">Assembly to use. Default is Assembly.GetExecutingAssembly()</param>
-        /// <returns></returns>
         public static Type[] GetTypesInNamespace(string nameSpace, Assembly assembly = null)
         {
             if (assembly == null) { assembly = Assembly.GetExecutingAssembly(); }

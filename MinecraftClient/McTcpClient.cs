@@ -15,9 +15,6 @@ using MinecraftClient.API;
 
 namespace MinecraftClient
 {
-    /// <summary>
-    /// The main client class, used to connect to a Minecraft server.
-    /// </summary>
     public class McTcpClient : IMinecraftComHandler
     {
         public static int ReconnectionAttemptsLeft = 0;
@@ -37,7 +34,6 @@ namespace MinecraftClient
         private int port;
         private string sessionid;
 
-
         List<IPlugin> plugins;
 
         public int GetServerPort() { return port; }
@@ -50,29 +46,11 @@ namespace MinecraftClient
         IMinecraftCom handler;
         Thread cmdprompt;
 
-        /// <summary>
-        /// Starts the main chat client
-        /// </summary>
-        /// <param name="username">The chosen username of a premium Minecraft Account</param>
-        /// <param name="uuid">The player's UUID for online-mode authentication</param>
-        /// <param name="sessionID">A valid sessionID obtained after logging in</param>
-        /// <param name="server_ip">The server IP</param>
-        /// <param name="port">The server port to use</param>
-        /// <param name="protocolversion">Minecraft protocol version to use</param>
         public McTcpClient(string username, string uuid, string sessionID, int protocolversion, ForgeInfo forgeInfo, string server_ip, ushort port, List<IPlugin> plugins)
         {
             StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo, plugins);
         }
 
-        /// <summary>
-        /// Starts the main chat client, wich will login to the server using the MinecraftCom class.
-        /// </summary>
-        /// <param name="user">The chosen username of a premium Minecraft Account</param>
-        /// <param name="sessionID">A valid sessionID obtained with MinecraftCom.GetLogin()</param>
-        /// <param name="server_ip">The server IP</param>
-        /// <param name="port">The server port to use</param>
-        /// <param name="protocolversion">Minecraft protocol version to use</param>
-        /// <param name="uuid">The player's UUID for online-mode authentication</param>
         private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo, List<IPlugin> plugins)
         {
             terrainAndMovementsEnabled = Settings.TerrainAndMovements;
@@ -81,8 +59,7 @@ namespace MinecraftClient
             this.port = port;
             this.plugins = plugins;
             player = new Player(world, user, uuid);
-
-           
+        
             try
             {
                 client = ProxyHandler.newTcpClient(host, port);
@@ -91,9 +68,7 @@ namespace MinecraftClient
                 handler = ProtocolHandler.GetProtocolHandler(client, protocolversion, forgeInfo, this, player);
                 player.SetHandler(handler);
 
-
                 Console.WriteLine("Version is supported.\nLogging in...");
-
                 try
                 {
                     if (handler.Login())
@@ -105,7 +80,7 @@ namespace MinecraftClient
                             + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
                             + "quit' to leave the server.");
 
-                        cmdprompt = new Thread(new ThreadStart(CommandPrompt));
+                        cmdprompt = new Thread(new ThreadStart(ConsoleInputHandler));
                         cmdprompt.Name = "MCC Command prompt";
                         cmdprompt.Start();
 
@@ -127,15 +102,9 @@ namespace MinecraftClient
                 ConsoleIO.WriteLineFormatted("§8" + e.Message);
                 Console.WriteLine("Failed to connect to this IP.");
             }
-
             Program.HandleFailure();
-
         }
-
-        /// <summary>
-        /// Allows the user to send chat messages, commands, and to leave the server.
-        /// </summary>
-        private void CommandPrompt()
+        private void ConsoleInputHandler()
         {
             try
             {
@@ -178,9 +147,6 @@ namespace MinecraftClient
             catch (NullReferenceException) { }
         }
 
-        /// <summary>
-        /// Disconnect the client from the server
-        /// </summary>
         public void Disconnect()
         {
             if (handler != null)
@@ -198,9 +164,6 @@ namespace MinecraftClient
                 client.Close();
         }
 
-        /// <summary>
-        /// Called when a server was successfully joined
-        /// </summary>
         public void OnGameJoined()
         {
             if (!String.IsNullOrWhiteSpace(Settings.BrandInfo))
@@ -235,9 +198,6 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Get Terrain and Movements status.
-        /// </summary>
         public bool GetTerrainEnabled()
         {
             return terrainAndMovementsEnabled;
@@ -272,9 +232,6 @@ namespace MinecraftClient
         /// <summary>
         /// Received some text from the server
         /// </summary>
-        /// <param name="text">Text received</param>
-        /// <param name="isJson">TRUE if the text is JSON-Encoded</param>
-        /// <param name="links">Links embedded in text</param>
         public void OnTextReceived(string text, bool isJson)
         {
             List<string> links = new List<string>();
@@ -295,9 +252,6 @@ namespace MinecraftClient
                     ConsoleIO.WriteLineFormatted("§8MCC: Link: " + link, false);
         }
 
-        /// <summary>
-        /// When connection has been lost
-        /// </summary>
         public void OnConnectionLost(ChatBot.DisconnectReason reason, string message)
         {
             world.Clear();
@@ -348,11 +302,6 @@ namespace MinecraftClient
             player.OnUpdate();
         }
 
-        /// <summary>
-        /// Send a chat message or command to the server
-        /// </summary>
-        /// <param name="text">Text to send to the server</param>
-        /// <returns>True if the text was sent with no error</returns>
         public bool SendText(string text)
         {
             int maxLength = handler.GetMaxChatMessageLength();
@@ -380,20 +329,10 @@ namespace MinecraftClient
             else return handler.SendChatMessage(text);
         }
 
-        /// <summary>
-        /// Allow to respawn after death
-        /// </summary>
-        /// <returns>True if packet successfully sent</returns>
         public bool SendRespawnPacket()
         {
             return handler.SendRespawnPacket();
         }
-
-        /// <summary>
-        /// Triggered when a new player joins the game
-        /// </summary>
-        /// <param name="uuid">UUID of the player</param>
-        /// <param name="name">Name of the player</param>
         public void OnPlayerJoin(Guid uuid, string name)
         {
             //Ignore placeholders eg 0000tab# from TabListPlus
@@ -405,11 +344,6 @@ namespace MinecraftClient
                 onlinePlayers[uuid] = name;
             }
         }
-
-        /// <summary>
-        /// Triggered when a player has left the game
-        /// </summary>
-        /// <param name="uuid">UUID of the player</param>
         public void OnPlayerLeave(Guid uuid)
         {
             lock (onlinePlayers)
@@ -417,11 +351,6 @@ namespace MinecraftClient
                 onlinePlayers.Remove(uuid);
             }
         }
-
-        /// <summary>
-        /// Get a set of online player names
-        /// </summary>
-        /// <returns>Online player names</returns>
         public string[] GetOnlinePlayers()
         {
             lock (onlinePlayers)
@@ -449,12 +378,6 @@ namespace MinecraftClient
             }
             return uuid2Player;
         }
-
-        /// <summary>
-        /// Registers the given plugin channel for the given bot.
-        /// </summary>
-        /// <param name="channel">The channel to register.</param>
-        /// <param name="bot">The bot to register the channel for.</param>
         public void RegisterPluginChannel(string channel, ChatBot bot)
         {
             if (registeredBotPluginChannels.ContainsKey(channel))
@@ -470,11 +393,6 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Unregisters the given plugin channel for the given bot.
-        /// </summary>
-        /// <param name="channel">The channel to unregister.</param>
-        /// <param name="bot">The bot to unregister the channel for.</param>
         public void UnregisterPluginChannel(string channel, ChatBot bot)
         {
             if (registeredBotPluginChannels.ContainsKey(channel))
@@ -493,10 +411,6 @@ namespace MinecraftClient
         /// Sends a plugin channel packet to the server.  See http://wiki.vg/Plugin_channel for more information
         /// about plugin channels.
         /// </summary>
-        /// <param name="channel">The channel to send the packet on.</param>
-        /// <param name="data">The payload for the packet.</param>
-        /// <param name="sendEvenIfNotRegistered">Whether the packet should be sent even if the server or the client hasn't registered it yet.</param>
-        /// <returns>Whether the packet was sent: true if it was sent, false if there was a connection error or it wasn't registered.</returns>
         public bool SendPluginChannelMessage(string channel, byte[] data, bool sendEvenIfNotRegistered = false)
         {
             if (!sendEvenIfNotRegistered)
@@ -512,12 +426,6 @@ namespace MinecraftClient
             }
             return handler.SendPluginChannelPacket(channel, data);
         }
-
-        /// <summary>
-        /// Called when a plugin channel message was sent from the server.
-        /// </summary>
-        /// <param name="channel">The channel the message was sent on</param>
-        /// <param name="data">The data from the channel</param>
         public void OnPluginChannelMessage(string channel, byte[] data)
         {
             if (channel == "REGISTER")

@@ -11,19 +11,12 @@ namespace MinecraftClient
     /// </summary>
     public static class Json
     {
-        /// <summary>
-        /// Parse some JSON and return the corresponding JSON object
-        /// </summary>
         public static JSONData ParseJson(string json)
         {
             int cursorpos = 0;
             return String2Data(json, ref cursorpos);
         }
 
-        /// <summary>
-        /// The class storing unserialized JSON data
-        /// The data can be an object, an array or a string
-        /// </summary>
         public class JSONData
         {
             public enum DataType { Object, Array, String };
@@ -41,11 +34,6 @@ namespace MinecraftClient
             }
         }
 
-        /// <summary>
-        /// Parse a JSON string to build a JSON object
-        /// </summary>
-        /// <param name="toparse">String to parse</param>
-        /// <param name="cursorpos">Cursor start (set to 0 for function init)</param>
         private static JSONData String2Data(string toparse, ref int cursorpos)
         {
             try
@@ -181,12 +169,6 @@ namespace MinecraftClient
                 return new JSONData(JSONData.DataType.String);
             }
         }
-
-        /// <summary>
-        /// Small function for checking if a char is an hexadecimal char (0-9 A-F a-f)
-        /// </summary>
-        /// <param name="c">Char to test</param>
-        /// <returns>True if hexadecimal</returns>
         private static bool isHex(char c) { return ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')); }
     }
 }
