@@ -24,7 +24,7 @@ namespace MinecraftClient.Commands
 
                 if (Settings.SetServerIP(args[0]))
                 {
-                    Program.Restart();
+                    Program.Exit();
                     return "";
                 }
                 else return "Invalid server IP '" + args[0] + "'.";

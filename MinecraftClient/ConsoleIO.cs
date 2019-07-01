@@ -49,13 +49,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Determines whether to use interactive IO or basic IO.
-        /// Set to true to disable interactive command prompt and use the default Console.Read|Write() methods.
-        /// Color codes are printed as is when BasicIO is enabled.
-        /// </summary>
-        public static bool BasicIO = false;
-
-        /// <summary>
         /// Determine whether WriteLineFormatted() should prepend lines with timestamps by default.
         /// </summary>
         public static bool EnableTimestamps = false;
@@ -115,118 +108,7 @@ namespace MinecraftClient
         /// </summary>
         public static string ReadLine()
         {
-            if (BasicIO)
-            {
-                return Console.ReadLine();
-            }
-
-            ConsoleKeyInfo k = new ConsoleKeyInfo();
-
-            lock (io_lock)
-            {
-                Console.Write('>');
-                reading = true;
-                buffer = "";
-                buffer2 = "";
-            }
-
-            while (k.Key != ConsoleKey.Enter)
-            {
-                k = Console.ReadKey(true);
-                lock (io_lock)
-                {
-                    if (k.Key == ConsoleKey.V && k.Modifiers == ConsoleModifiers.Control)
-                    {
-                        string clip = ReadClipboard();
-                        foreach (char c in clip)
-                            AddChar(c);
-                    }
-                    else
-                    {
-                        switch (k.Key)
-                        {
-                            case ConsoleKey.Escape:
-                                ClearLineAndBuffer();
-                                break;
-                            case ConsoleKey.Backspace:
-                                RemoveOneChar();
-                                break;
-                            case ConsoleKey.Enter:
-                                Console.Write('\n');
-                                break;
-                            case ConsoleKey.LeftArrow:
-                                GoLeft();
-                                break;
-                            case ConsoleKey.RightArrow:
-                                GoRight();
-                                break;
-                            case ConsoleKey.Home:
-                                while (buffer.Length > 0) { GoLeft(); }
-                                break;
-                            case ConsoleKey.End:
-                                while (buffer2.Length > 0) { GoRight(); }
-                                break;
-                            case ConsoleKey.Delete:
-                                if (buffer2.Length > 0)
-                                {
-                                    GoRight();
-                                    RemoveOneChar();
-                                }
-                                break;
-                            case ConsoleKey.DownArrow:
-                                if (previous.Count > 0)
-                                {
-                                    ClearLineAndBuffer();
-                                    buffer = previous.First.Value;
-                                    previous.AddLast(buffer);
-                                    previous.RemoveFirst();
-                                    Console.Write(buffer);
-                                }
-                                break;
-                            case ConsoleKey.UpArrow:
-                                if (previous.Count > 0)
-                                {
-                                    ClearLineAndBuffer();
-                                    buffer = previous.Last.Value;
-                                    previous.AddFirst(buffer);
-                                    previous.RemoveLast();
-                                    Console.Write(buffer);
-                                }
-                                break;
-                            case ConsoleKey.Tab:
-                                if (autocomplete_words.Count == 0 && autocomplete_engine != null && buffer.Length > 0)
-                                    foreach (string result in autocomplete_engine.AutoComplete(buffer))
-                                        autocomplete_words.AddLast(result);
-                                string word_autocomplete = null;
-                                if (autocomplete_words.Count > 0)
-                                {
-                                    word_autocomplete = autocomplete_words.First.Value;
-                                    autocomplete_words.RemoveFirst();
-                                    autocomplete_words.AddLast(word_autocomplete);
-                                }
-                                if (!String.IsNullOrEmpty(word_autocomplete) && word_autocomplete != buffer)
-                                {
-                                    while (buffer.Length > 0 && buffer[buffer.Length - 1] != ' ') { RemoveOneChar(); }
-                                    foreach (char c in word_autocomplete) { AddChar(c); }
-                                }
-                                break;
-                            default:
-                                if (k.KeyChar != 0)
-                                    AddChar(k.KeyChar);
-                                break;
-                        }
-                    }
-                    if (k.Key != ConsoleKey.Tab)
-                        autocomplete_words.Clear();
-                }
-            }
-
-            lock (io_lock)
-            {
-                reading = false;
-                previous.AddLast(buffer + buffer2);
-                return buffer + buffer2;
-            }
+           return Console.ReadLine();
         }
 
         /// <summary>
@@ -247,47 +129,7 @@ namespace MinecraftClient
         /// </summary>
         public static void Write(string text)
         {
-            if (!BasicIO)
-            {
-                lock (io_lock)
-                {
-                    if (reading)
-                    {
-                        try
-                        {
-                            string buf = buffer;
-                            string buf2 = buffer2;
-                            ClearLineAndBuffer();
-                            if (Console.CursorLeft == 0)
-                            {
-                                Console.CursorLeft = Console.BufferWidth - 1;
-                                Console.CursorTop--;
-                                Console.Write(' ');
-                                Console.CursorLeft = Console.BufferWidth - 1;
-                                Console.CursorTop--;
-                            }
-                            else Console.Write("\b \b");
-                            Console.Write(text);
-                            buffer = buf;
-                            buffer2 = buf2;
-                            Console.Write(">" + buffer);
-                            if (buffer2.Length > 0)
-                            {
-                                Console.Write(buffer2 + " \b");
-                                for (int i = 0; i < buffer2.Length; i++) { GoBack(); }
-                            }
-                        }
-                        catch (ArgumentOutOfRangeException)
-                        {
-                            //Console resized: Try again
-                            Console.Write('\n');
-                            Write(text);
-                        }
-                    }
-                    else Console.Write(text);
-                }
-            }
-            else Console.Write(text);
+            Console.Write(text);
         }
 
         /// <summary>
@@ -334,11 +176,10 @@ namespace MinecraftClient
                     int hour = DateTime.Now.Hour, minute = DateTime.Now.Minute, second = DateTime.Now.Second;
                     ConsoleIO.Write(String.Format("{0}:{1}:{2} ", hour.ToString("00"), minute.ToString("00"), second.ToString("00")));
                 }
-                if (BasicIO)
-                {
-                    Console.WriteLine(str);
-                    return;
-                }
+                
+                Console.WriteLine(str);
+                return;
+
                 string[] parts = str.Split(new char[] { '§' });
                 if (parts[0].Length > 0)
                 {

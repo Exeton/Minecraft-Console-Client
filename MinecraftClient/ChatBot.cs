@@ -405,17 +405,6 @@ namespace MinecraftClient
             return false;
         }
 
-        /// <summary>
-        /// Disconnect from the server and restart the program
-        /// It will unload and reload all the bots and then reconnect to the server
-        /// </summary>
-        /// <param name="attempts">In case of failure, maximum extra attempts before aborting</param>
-        /// <param name="delaySeconds">Optional delay, in seconds, before restarting</param>
-        protected void ReconnectToTheServer(int ExtraAttempts = 3, int delaySeconds = 0)
-        {
-            McTcpClient.ReconnectionAttemptsLeft = ExtraAttempts;
-            Program.Restart(delaySeconds);
-        }
 
         /// <summary>
         /// Disconnect from the server and exit the program

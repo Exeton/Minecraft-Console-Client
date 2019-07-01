@@ -76,8 +76,6 @@ namespace MinecraftClient
         private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo, List<IPlugin> plugins)
         {
             terrainAndMovementsEnabled = Settings.TerrainAndMovements;
-
-            bool retry = false;
             this.sessionid = sessionID;
             this.host = server_ip;
             this.port = port;
@@ -122,30 +120,16 @@ namespace MinecraftClient
                 {
                     ConsoleIO.WriteLineFormatted("§8" + e.Message);
                     Console.WriteLine("Failed to join this server.");
-                    retry = true;
                 }
             }
             catch (SocketException e)
             {
                 ConsoleIO.WriteLineFormatted("§8" + e.Message);
                 Console.WriteLine("Failed to connect to this IP.");
-                retry = true;
             }
 
-            if (retry)
-            {
-                if (ReconnectionAttemptsLeft > 0)
-                {
-                    ConsoleIO.WriteLogLine("Waiting 5 seconds (" + ReconnectionAttemptsLeft + " attempts left)...");
-                    Thread.Sleep(5000);
-                    ReconnectionAttemptsLeft--;
-                    Program.Restart();
-                }
-                else if (Settings.interactiveMode)
-                {
-                    Program.HandleFailure();
-                }
-            }
+            Program.HandleFailure();
+
         }
 
         /// <summary>
@@ -158,7 +142,7 @@ namespace MinecraftClient
                 while (client.Client.Connected)
                 {
                     string text = ConsoleIO.ReadLine();
-                    if (ConsoleIO.BasicIO && text.Length > 0 && text[0] == (char)0x00)
+                    if (text.Length > 0 && text[0] == (char)0x00)
                     {
                         //Process a request from the GUI
                         string[] command = text.Substring(1).Split((char)0x00);

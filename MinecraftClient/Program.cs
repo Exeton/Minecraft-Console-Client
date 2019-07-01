@@ -29,7 +29,7 @@ namespace MinecraftClient
     /// </remarks>
     static class Program
     {
-        private static McTcpClient Client;
+        public static McTcpClient Client;
         public static CommandHandler CommandHandler;
         public static string[] startupargs;
 
@@ -49,16 +49,13 @@ namespace MinecraftClient
             Console.WriteLine("Console Client for MC {0} to {1} - v{2} - By ORelio & Contributors", MCLowestVersion, MCHighestVersion, Version);
 
             CommandHandler = new CommandHandler();
-            CommandHandler.addCommand("reco", new Reco());
-            CommandHandler.addCommand("reconnect", new Reco());
             CommandHandler.addCommand("connect", new Connect());
             CommandHandler.addCommand("exit", new Exit());
             CommandHandler.addCommand("quit", new Exit());
             CommandHandler.addCommand("help", new Help(CommandHandler));
 
-            args = PrepareConsole(args);
-            args = LoadSettings(args);
-            loadSettingsFromArgs(args);
+            bool keyboardDebug = (args.Length >= 1) && (args[0] == "--keyboard-debug");
+            PrepareConsole(keyboardDebug);
 
             if (Settings.ConsoleTitle != "")
             {
@@ -75,69 +72,33 @@ namespace MinecraftClient
             InitializeClient();
         }
 
-        static string[] PrepareConsole(string[] args)
+        static void PrepareConsole(bool keyboardDebug)
         {
             if (BuildInfo != null)
             {
                 ConsoleIO.WriteLineFormatted("§8" + BuildInfo);
             }
 
-            if (args.Length == 1 && args[0] == "--keyboard-debug")
+            if (keyboardDebug)
             {
                 Console.WriteLine("Keyboard debug mode: Press any key to display info");
                 ConsoleIO.DebugReadInput();
             }
 
             ConsoleIO.LogPrefix = "§8[MCC] ";
-            if (args.Length >= 1 && args[args.Length - 1] == "BasicIO")
-            {
-                ConsoleIO.BasicIO = true;
-                args = args.Where(o => !Object.ReferenceEquals(o, args[args.Length - 1])).ToArray();
-            }
 
             //Take advantage of Windows 10 / Mac / Linux UTF-8 console
             if (isUsingMono || WindowsVersion.WinMajorVersion >= 10)
             {
                 Console.OutputEncoding = Console.InputEncoding = Encoding.UTF8;
             }
-
-            return args;
-        }
-        static string[] LoadSettings(string[] args)
-        {
-            if (args.Length >= 1 && System.IO.File.Exists(args[0]) && System.IO.Path.GetExtension(args[0]).ToLower() == ".ini")
-            {
-                Settings.LoadSettings(args[0]);
-
-                List<string> args_tmp = args.ToList<string>();
-                args_tmp.RemoveAt(0);
-                args = args_tmp.ToArray();
-            }
-            else if (System.IO.File.Exists("MinecraftClient.ini"))
-            {
-                Settings.LoadSettings("MinecraftClient.ini");
-            }
-            else Settings.WriteDefaultSettings("MinecraftClient.ini");
-
-            return args;
-        }        
-        static void loadSettingsFromArgs(string[] args)
-        {
-            if (args.Length >= 1)           
-                Settings.Login = args[0];
-            
-            if (args.Length >= 2)           
-                Settings.Password = args[1];
-            
-            if (args.Length >= 3)            
-                Settings.SetServerIP(args[2]);                   
         }
         
         static void promptLoginInfo()
         {
             if (Settings.Login == "")
             {
-                Console.Write(ConsoleIO.BasicIO ? "Please type the username or email of your choice.\n" : "Login : ");
+                Console.Write("Login : ");
                 Settings.Login = Console.ReadLine();
             }
             if (Settings.Password == "" && (Settings.SessionCaching == CacheType.None || !SessionCache.Contains(Settings.Login.ToLower())))
@@ -151,15 +112,9 @@ namespace MinecraftClient
         /// </summary>
         private static void RequestPassword()
         {
-            Console.Write(ConsoleIO.BasicIO ? "Please type the password for " + Settings.Login + ".\n" : "Password : ");
-            Settings.Password = ConsoleIO.BasicIO ? Console.ReadLine() : ConsoleIO.ReadPassword();
+            Console.Write("Password : ");
+            Settings.Password = ConsoleIO.ReadPassword();//May need to be readline for the GUI
             if (Settings.Password == "") { Settings.Password = "-"; }
-            if (!ConsoleIO.BasicIO)
-            {
-                //Hide password length
-                Console.CursorTop--; Console.Write("Password : <******>");
-                for (int i = 19; i < Console.BufferWidth; i++) { Console.Write(' '); }
-            }
         }
 
         /// <summary>
@@ -304,26 +259,6 @@ namespace MinecraftClient
         }
 
         /// <summary>
-        /// Disconnect the current client from the server and restart it
-        /// </summary>
-        /// <param name="delaySeconds">Optional delay, in seconds, before restarting</param>
-        public static void Restart(int delaySeconds = 0)
-        {
-            new Thread(new ThreadStart(delegate
-            {
-                if (Client != null) { Client.Disconnect(); ConsoleIO.Reset(); }
-                if (offlinePrompt != null) { offlinePrompt.Abort(); offlinePrompt = null; ConsoleIO.Reset(); }
-                if (delaySeconds > 0)
-                {
-                    Console.WriteLine("Waiting " + delaySeconds + " seconds before restarting...");
-                    System.Threading.Thread.Sleep(delaySeconds * 1000);
-                }
-                Console.WriteLine("Restarting Minecraft Console Client...");
-                InitializeClient();
-            })).Start();
-        }
-
-        /// <summary>
         /// Disconnect the current client from the server and exit the app
         /// </summary>
         public static void Exit()
@@ -360,20 +295,8 @@ namespace MinecraftClient
                 }
             }
 
-            if (Settings.interactiveMode)
+            if (Settings.interactiveMode && !versionError)
             {
-                if (versionError)
-                {
-                    Console.Write("Server version : ");
-                    Settings.ServerConnectionInfo.ServerVersion = Console.ReadLine();
-                    if (Settings.ServerConnectionInfo.ServerVersion != "")
-                    {
-                        useMcVersionOnce = true;
-                        Restart();
-                        return;
-                    }
-                }
-
                 if (offlinePrompt == null)
                 {
                     offlinePrompt = new Thread(new ThreadStart(delegate
@@ -383,11 +306,6 @@ namespace MinecraftClient
                         ConsoleIO.WriteLineFormatted("Or press Enter to exit Minecraft Console Client.");
                         while ((command = Console.ReadLine().Trim()).Length > 0)
                         {
-                            if (!ConsoleIO.BasicIO)
-                            {
-                                ConsoleIO.Write('>');
-                            }
-
                             if (Settings.internalCmdChar != ' ' && command[0] == Settings.internalCmdChar)
                                 command = command.Substring(1);
 

@@ -15,7 +15,7 @@ namespace MinecraftClient.Data
         private float? yaw;
         private float? pitch;
         public bool locationReceived = false;
-        World world;
+        public World world;
 
         private string username;
         private string uuid;

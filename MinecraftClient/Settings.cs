@@ -87,7 +87,7 @@ namespace MinecraftClient
         public static bool DisplaySystemMessages = true;
         public static bool DisplayXPBarMessages = true;
         public static bool DisplayChatLinks = true;
-        public static bool TerrainAndMovements = false;
+        public static bool TerrainAndMovements = true;
         public static bool InventoryHandling = false;
         public static string PrivateMsgsCmdName = "tell";
         public static CacheType SessionCaching = CacheType.Disk;
@@ -189,7 +189,7 @@ namespace MinecraftClient
                                                 case "showsystemmessages": DisplaySystemMessages = str2bool(argValue); break;
                                                 case "showxpbarmessages": DisplayXPBarMessages = str2bool(argValue); break;
                                                 case "showchatlinks": DisplayChatLinks = str2bool(argValue); break;
-                                                case "terrainandmovements": TerrainAndMovements = str2bool(argValue); break;
+                                                //case "terrainandmovements": TerrainAndMovements = str2bool(argValue); break;
                                                 case "inventoryhandling": InventoryHandling = str2bool(argValue); break;
                                                 case "privatemsgscmdname": PrivateMsgsCmdName = argValue.ToLower().Trim(); break;
                                                 case "botmessagedelay": botMessageDelay = TimeSpan.FromSeconds(str2int(argValue)); break;

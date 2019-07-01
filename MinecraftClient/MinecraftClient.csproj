@@ -92,7 +92,6 @@
     <Compile Include="Commands\Move.cs" />
     <Compile Include="Commands\Exit.cs" />
     <Compile Include="Commands\Log.cs" />
-    <Compile Include="Commands\Reco.cs" />
     <Compile Include="Commands\Respawn.cs" />
     <Compile Include="Commands\Script.cs" />
     <Compile Include="Commands\Send.cs" />
@@ -146,7 +145,8 @@
     <Compile Include="Net\Protocol\Handlers\SocketWrapper.cs" />
     <Compile Include="Net\Protocol\Session\SessionFileMonitor.cs" />
     <Compile Include="Net\ServerConnectionInfo.cs" />
-    <Compile Include="Net\SessionValidation\ISessionValidator.cs" />
+    <Compile Include="Net\SessionValidation\DefaultLoginParser.cs" />
+    <Compile Include="Net\SessionValidation\ILoginParser.cs" />
     <Compile Include="WinAPI\ConsoleIcon.cs" />
     <Compile Include="ConsoleIO.cs" />
     <Compile Include="Net\Crypto\Streams\BouncyAes\AesFastEngine.cs" />
