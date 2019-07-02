@@ -19,11 +19,8 @@ namespace MinecraftClient.Commands
             string[] temp = argStr.Split('=');
             if (temp.Length > 1)
             {
-                if (Settings.SetVar(temp[0], argStr.Substring(temp[0].Length + 1)))
-                {
-                    return ""; //Success
-                }
-                else return "variable name must be A-Za-z0-9.";
+                return "varriables not accepted";
+                //return "variable name must be A-Za-z0-9.";
             }
             return CMDDesc;
         }

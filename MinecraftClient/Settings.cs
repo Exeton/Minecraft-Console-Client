@@ -100,25 +100,11 @@ namespace MinecraftClient
         public static bool ScriptScheduler_Enabled = false;
         public static string ScriptScheduler_TasksFile = "tasks.ini";
 
-        //Remote Control
-        public static bool RemoteCtrl_Enabled = false;
-        public static bool RemoteCtrl_AutoTpaccept = true;
-        public static bool RemoteCtrl_AutoTpaccept_Everyone = false;
-
         //Chat Message Parsing
         public static bool ChatFormat_Builtins = true;
         public static Regex ChatFormat_Public = null;
         public static Regex ChatFormat_Private = null;
         public static Regex ChatFormat_TeleportRequest = null;
-
-        //Auto Respond
-        public static bool AutoRespond_Enabled = false;
-        public static string AutoRespond_Matches = "matches.ini";
-
-        //Custom app variables and Minecraft accounts
-        private static readonly Dictionary<string, object> AppVars = new Dictionary<string, object>();
-        private static readonly Dictionary<string, KeyValuePair<string, string>> Accounts = new Dictionary<string, KeyValuePair<string, string>>();
-        private static readonly Dictionary<string, KeyValuePair<string, ushort>> Servers = new Dictionary<string, KeyValuePair<string, ushort>>();
 
         private enum ParseMode { Default, Main, AppVars, Proxy, MCSettings, AntiAFK, Hangman, Alerts, ChatLog, AutoRelog, ScriptScheduler, RemoteControl, ChatFormat, AutoRespond };
 
@@ -218,52 +204,7 @@ namespace MinecraftClient
                                                     if (argValue == "none") { SessionCaching = CacheType.None; }
                                                     else if (argValue == "disk") { SessionCaching = CacheType.Disk; }
                                                     break;
-
-                                                case "accountlist":
-                                                    if (File.Exists(argValue))
-                                                    {
-                                                        foreach (string account_line in File.ReadAllLines(argValue))
-                                                        {
-                                                            //Each line contains account data: 'Alias,Login,Password'
-                                                            string[] account_data = account_line.Split('#')[0].Trim().Split(',');
-                                                            if (account_data.Length == 3)
-                                                                Accounts[account_data[0].ToLower()]
-                                                                    = new KeyValuePair<string, string>(account_data[1], account_data[2]);
-                                                        }
-
-                                                        //Try user value against aliases after load
-                                                        Settings.SetAccount(Login);
-                                                    }
-                                                    break;
-
-                                                case "serverlist":
-                                                    if (File.Exists(argValue))
-                                                    {
-                                                        //Backup current server info
-                                                        string server_host_temp = ServerConnectionInfo.ServerIP;
-                                                        ushort server_port_temp = ServerConnectionInfo.ServerPort;
-
-                                                        foreach (string server_line in File.ReadAllLines(argValue))
-                                                        {
-                                                            //Each line contains server data: 'Alias,Host:Port'
-                                                            string[] server_data = server_line.Split('#')[0].Trim().Split(',');
-                                                            server_data[0] = server_data[0].ToLower();
-                                                            if (server_data.Length == 2
-                                                                && server_data[0] != "localhost"
-                                                                && !server_data[0].Contains('.')
-                                                                && SetServerIP(server_data[1]))
-                                                                Servers[server_data[0]]
-                                                                    = new KeyValuePair<string, ushort>(ServerConnectionInfo.ServerIP, ServerConnectionInfo.ServerPort);
-                                                        }
-
-                                                        //Restore current server info
-                                                        ServerConnectionInfo.ServerIP = server_host_temp;
-                                                        ServerConnectionInfo.ServerPort = server_port_temp;
-
-                                                        //Try server value against aliases after load
-                                                        SetServerIP(serverAlias);
-                                                    }
-                                                    break;
+                                           
 
                                                 case "brandinfo":
                                                     switch (argValue.Trim().ToLower())
@@ -297,14 +238,6 @@ namespace MinecraftClient
                                             }
                                             break;
 
-                                        case ParseMode.RemoteControl:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": RemoteCtrl_Enabled = str2bool(argValue); break;
-                                                case "autotpaccept": RemoteCtrl_AutoTpaccept = str2bool(argValue); break;
-                                                case "tpaccepteveryone": RemoteCtrl_AutoTpaccept_Everyone = str2bool(argValue); break;
-                                            }
-                                            break;
 
                                         case ParseMode.ChatFormat:
                                             switch (argName.ToLower())
@@ -349,17 +282,7 @@ namespace MinecraftClient
                                             }
                                             break;
 
-                                        case ParseMode.AppVars:
-                                            SetVar(argName, argValue);
-                                            break;
 
-                                        case ParseMode.AutoRespond:
-                                            switch (argName.ToLower())
-                                            {
-                                                case "enabled": AutoRespond_Enabled = str2bool(argValue); break;
-                                                case "matchesfile": AutoRespond_Matches = argValue; break;
-                                            }
-                                            break;
 
                                         case ParseMode.MCSettings:
                                             switch (argName.ToLower())
@@ -573,21 +496,7 @@ namespace MinecraftClient
             return str == "true" || str == "1";
         }
 
-        /// <summary>
-        /// Load login/password using an account alias
-        /// </summary>
-        /// <returns>True if the account was found and loaded</returns>
-        public static bool SetAccount(string accountAlias)
-        {
-            accountAlias = accountAlias.ToLower();
-            if (Accounts.ContainsKey(accountAlias))
-            {
-                Settings.Login = Accounts[accountAlias].Key;
-                Settings.Password = Accounts[accountAlias].Value;
-                return true;
-            }
-            else return false;
-        }
+
 
         /// <summary>
         /// Load server information in ServerIP and ServerPort variables from a "serverip:port" couple or server alias
@@ -619,48 +528,10 @@ namespace MinecraftClient
                 ServerConnectionInfo.ServerPort = port;
                 return true;
             }
-            else if (Servers.ContainsKey(server))
-            {
-                //Server Alias (if no dot then treat the server as an alias)
-                ServerConnectionInfo.ServerIP = Servers[server].Key;
-                ServerConnectionInfo.ServerPort = Servers[server].Value;
-                return true;
-            }
 
             return false;
         }
 
-        /// <summary>
-        /// Set a custom %variable% which will be available through expandVars()
-        /// </summary>
-        /// <param name="varName">Name of the variable</param>
-        /// <param name="varData">Value of the variable</param>
-        /// <returns>True if the parameters were valid</returns>
-        public static bool SetVar(string varName, object varData)
-        {
-            lock (AppVars)
-            {
-                varName = new string(varName.TakeWhile(char.IsLetterOrDigit).ToArray()).ToLower();
-                if (varName.Length > 0)
-                {
-                    AppVars[varName] = varData;
-                    return true;
-                }
-                else return false;
-            }
-        }
-
-        /// <summary>
-        /// Get a custom %variable% or null if the variable does not exist
-        /// </summary>
-        /// <param name="varName">Variable name</param>
-        /// <returns>The value or null if the variable does not exists</returns>
-        public static object GetVar(string varName)
-        {
-            if (AppVars.ContainsKey(varName))
-                return AppVars[varName];
-            return null;
-        }
 
         /// <summary>
         /// Replace %variables% with their value
@@ -700,12 +571,7 @@ namespace MinecraftClient
                             case "serverip": result.Append(ServerConnectionInfo.ServerIP); break;
                             case "serverport": result.Append(ServerConnectionInfo.ServerPort); break;
                             default:
-                                if (AppVars.ContainsKey(varname_lower))
-                                {
-                                    result.Append(AppVars[varname_lower].ToString());
-                                }
-                                else result.Append("%" + varname + '%');
-                                break;
+                                 result.Append("%" + varname + '%'); break;
                         }
                     }
                     else result.Append(str[i]);

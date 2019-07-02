@@ -16,10 +16,10 @@ namespace MinecraftClient.Commands
             {
                 if (args.Length > 1)
                 {
-                    if (!Settings.SetAccount(args[1]))
-                    {
-                        return "Unknown account '" + args[1] + "'.";
-                    }
+                    //if (!Settings.SetAccount(args[1]))
+                    //{
+                    //    return "Unknown account '" + args[1] + "'.";
+                    //}
                 }
 
                 if (Settings.SetServerIP(args[0]))
