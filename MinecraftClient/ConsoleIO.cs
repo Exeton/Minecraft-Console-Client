@@ -130,9 +130,7 @@ namespace MinecraftClient
         /// Write a Minecraft-Like formatted string to the standard output, using §c color codes
         /// See minecraft.gamepedia.com/Classic_server_protocol#Color_Codes for more info
         /// </summary>
-        /// <param name="str">String to write</param>
         /// <param name="acceptnewlines">If false, space are printed instead of newlines</param>
-        /// <param name="displayTimestamps">
         /// If false, no timestamp is prepended.
         /// If true, "hh-mm-ss" timestamp will be prepended.
         /// If unspecified, value is retrieved from EnableTimestamps.

@@ -10,12 +10,14 @@ namespace MinecraftClient.API
     {
         public static McTcpClient GetTcpClient()
         {
-            return Program.Client;
+            //return Program.Client;
+            return null;
         }
 
         public static Player GetPlayer()
         {
-            return Program.Client.player;
+            //return Program.Client.player;
+            return null;
         }
 
     }

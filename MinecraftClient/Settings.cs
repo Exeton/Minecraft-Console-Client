@@ -216,7 +216,6 @@ namespace MinecraftClient
 
                                                 case "sessioncache":
                                                     if (argValue == "none") { SessionCaching = CacheType.None; }
-                                                    else if (argValue == "memory") { SessionCaching = CacheType.Memory; }
                                                     else if (argValue == "disk") { SessionCaching = CacheType.Disk; }
                                                     break;
 

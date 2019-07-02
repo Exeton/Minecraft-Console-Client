@@ -59,7 +59,7 @@ namespace MinecraftClient
             this.port = port;
             this.plugins = plugins;
             player = new Player(world, user, uuid);
-        
+
             try
             {
                 client = ProxyHandler.newTcpClient(host, port);
@@ -84,25 +84,27 @@ namespace MinecraftClient
                         cmdprompt.Name = "MCC Command prompt";
                         cmdprompt.Start();
 
-                        Thread respawnPacket = new Thread(new ThreadStart(() =>{
+                        Thread respawnPacket = new Thread(new ThreadStart(() =>
+                        {
                             Thread.Sleep(500);
                             handler.SendRespawnPacket();
                         }));
-                        respawnPacket.Start();                    
+                        respawnPacket.Start();
                     }
                 }
                 catch (Exception e)
                 {
                     ConsoleIO.WriteLineFormatted("§8" + e.Message);
                     Console.WriteLine("Failed to join this server.");
+                    Client.Client.HandleFailure();
                 }
             }
             catch (SocketException e)
             {
                 ConsoleIO.WriteLineFormatted("§8" + e.Message);
                 Console.WriteLine("Failed to connect to this IP.");
+                Client.Client.HandleFailure();
             }
-            Program.HandleFailure();
         }
         private void ConsoleInputHandler()
         {
@@ -277,7 +279,7 @@ namespace MinecraftClient
             }
 
             if (!will_restart)
-                Program.HandleFailure();
+                Client.Client.HandleFailure();
         }
 
         /// <summary>

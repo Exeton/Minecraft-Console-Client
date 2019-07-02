@@ -83,6 +83,7 @@
     <Compile Include="ChatBots\ChatLog.cs" />
     <Compile Include="ChatBots\RemoteControl.cs" />
     <Compile Include="ChatBot.cs" />
+    <Compile Include="Client\Client.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Commands\CommandHandler.cs" />
     <Compile Include="Commands\Connect.cs" />
@@ -147,6 +148,8 @@
     <Compile Include="Net\ServerConnectionInfo.cs" />
     <Compile Include="Net\SessionValidation\DefaultLoginParser.cs" />
     <Compile Include="Net\SessionValidation\ILoginParser.cs" />
+    <Compile Include="SingleLogin\ISingleLoginRetriever.cs" />
+    <Compile Include="SingleLogin\PromptSingleLoginRetriever.cs" />
     <Compile Include="WinAPI\ConsoleIcon.cs" />
     <Compile Include="ConsoleIO.cs" />
     <Compile Include="Net\Crypto\Streams\BouncyAes\AesFastEngine.cs" />
