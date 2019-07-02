@@ -490,7 +490,7 @@ namespace MinecraftClient.Protocol
                     if (Settings.DebugMessages)
                         ConsoleIO.WriteLineFormatted("§8Performing request to " + host);
 
-                    TcpClient client = ProxyHandler.newTcpClient(host, 443, true);
+                    TcpClient client = ProxyHandler.startNewTcpClient(host, 443, true);
                     SslStream stream = new SslStream(client.GetStream());
                     stream.AuthenticateAsClient(host);
 

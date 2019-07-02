@@ -15,6 +15,9 @@ namespace MinecraftClient.SingleLogin
 
             Console.Write("Login : ");
             login = Console.ReadLine();
+            if (login == "")
+                login = "N00bBot";
+
 
 
             Console.Write("Password : ");

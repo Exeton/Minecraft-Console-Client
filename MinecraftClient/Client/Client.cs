@@ -25,6 +25,8 @@ namespace MinecraftClient.Client
 
         public void InitializeClient()
         {
+
+            //Login to minecraft auth servers
             SessionToken session = new SessionToken();
             ProtocolHandler.LoginResult loginResult = tryAuthenticateSession(session);
 
@@ -128,7 +130,7 @@ namespace MinecraftClient.Client
             {
                 try
                 {
-                    mcTcpClient = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, forgeInfo, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, plugins);
+                    mcTcpClient = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, forgeInfo, plugins);
 
                     //Update console title
                     if (Settings.ConsoleTitle != "")

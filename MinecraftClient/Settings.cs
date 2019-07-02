@@ -27,7 +27,7 @@ namespace MinecraftClient
         public static string Username = "";
         public static string Password = "";
 
-        public static ServerConnectionInfo ServerConnectionInfo = new ServerConnectionInfo();
+        public static ServerConnectionInfo ServerConnectionInfo = new ServerConnectionInfo("localhost", 25565);
         public static string ConsoleTitle = "";
 
         //Proxy Settings

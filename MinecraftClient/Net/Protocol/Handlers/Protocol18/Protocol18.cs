@@ -532,7 +532,7 @@ namespace MinecraftClient.Protocol.Handlers
         public static bool doPing(string host, int port, ref int protocolversion, ref ForgeInfo forgeInfo)
         {
             string version = "";
-            TcpClient tcp = ProxyHandler.newTcpClient(host, port);
+            TcpClient tcp = ProxyHandler.startNewTcpClient(host, port);
             tcp.ReceiveBufferSize = 1024 * 1024;
             SocketWrapper socketWrapper = new SocketWrapper(tcp);
             DataTypes dataTypes = new DataTypes((int)McVersion.V18);

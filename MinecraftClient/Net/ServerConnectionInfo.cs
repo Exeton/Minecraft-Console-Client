@@ -10,5 +10,12 @@ namespace MinecraftClient.View
         public string ServerIP = "";
         public ushort ServerPort = 25565;
         public string ServerVersion = "";
+
+        public ServerConnectionInfo(string ip, ushort port)
+        {
+            this.ServerIP = ip;
+            this.ServerPort = port;
+        }
+
     }
 }

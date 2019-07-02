@@ -12,6 +12,8 @@ using MinecraftClient.Mapping;
 using MinecraftClient.Commands;
 using MinecraftClient.Data;
 using MinecraftClient.API;
+using MinecraftClient.Net;
+using MinecraftClient.View;
 
 namespace MinecraftClient
 {
@@ -20,9 +22,6 @@ namespace MinecraftClient
         public static int ReconnectionAttemptsLeft = 0;
 
         private readonly Dictionary<Guid, string> onlinePlayers = new Dictionary<Guid, string>();
-
-        private readonly Dictionary<string, List<ChatBot>> registeredBotPluginChannels = new Dictionary<string, List<ChatBot>>();
-        private readonly List<string> registeredServerPluginChannels = new List<String>();
 
         public static bool terrainAndMovementsEnabled;
         public static bool terrainAndMovementsRequested = false;
@@ -35,6 +34,8 @@ namespace MinecraftClient
         private string sessionid;
 
         List<IPlugin> plugins;
+        PacketClient packetClient;
+
 
         public int GetServerPort() { return port; }
         public string GetServerHost() { return host; }
@@ -42,16 +43,15 @@ namespace MinecraftClient
         public string GetSessionID() { return sessionid; }
         public World GetWorld() { return world; }
 
-        TcpClient client;
-        IMinecraftCom handler;
+        public IMinecraftCom handler;
         Thread cmdprompt;
 
-        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, ForgeInfo forgeInfo, string server_ip, ushort port, List<IPlugin> plugins)
+        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo, List<IPlugin> plugins)
         {
-            StartClient(username, uuid, sessionID, server_ip, port, protocolversion, forgeInfo, plugins);
+            StartClient(username, uuid, sessionID, protocolversion, server_ip, port, forgeInfo, plugins);
         }
 
-        private void StartClient(string user, string uuid, string sessionID, string server_ip, ushort port, int protocolversion, ForgeInfo forgeInfo, List<IPlugin> plugins)
+        private void StartClient(string user, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo, List<IPlugin> plugins)
         {
             terrainAndMovementsEnabled = Settings.TerrainAndMovements;
             this.sessionid = sessionID;
@@ -62,42 +62,28 @@ namespace MinecraftClient
 
             try
             {
-                client = ProxyHandler.newTcpClient(host, port);
-                client.ReceiveBufferSize = 1024 * 1024;
 
-                handler = ProtocolHandler.GetProtocolHandler(client, protocolversion, forgeInfo, this, player);
+                packetClient = new PacketClient();
+                bool connected = packetClient.Connect(new ServerConnectionInfo("127.0.0.1", 25565), player, protocolversion, forgeInfo, this);
+
+                if (!connected)
+                    return;
+
+                this.handler = packetClient.communicationHandler;
+
                 player.SetHandler(handler);
 
-                Console.WriteLine("Version is supported.\nLogging in...");
-                try
-                {
-                    if (handler.Login())
-                    {
-                        foreach (IPlugin plugin in plugins)
-                            plugin.OnJoin();
+                foreach (IPlugin plugin in plugins)
+                    plugin.OnJoin();
 
-                        Console.WriteLine("Server was successfully joined.\nType '"
-                            + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
-                            + "quit' to leave the server.");
+                Console.WriteLine("Server was successfully joined.\nType '"
+                    + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
+                    + "quit' to leave the server.");
 
-                        cmdprompt = new Thread(new ThreadStart(ConsoleInputHandler));
-                        cmdprompt.Name = "MCC Command prompt";
-                        cmdprompt.Start();
+                cmdprompt = new Thread(new ThreadStart(ConsoleInputHandler));
+                cmdprompt.Name = "MCC Command prompt";
+                cmdprompt.Start();
 
-                        Thread respawnPacket = new Thread(new ThreadStart(() =>
-                        {
-                            Thread.Sleep(500);
-                            handler.SendRespawnPacket();
-                        }));
-                        respawnPacket.Start();
-                    }
-                }
-                catch (Exception e)
-                {
-                    ConsoleIO.WriteLineFormatted("§8" + e.Message);
-                    Console.WriteLine("Failed to join this server.");
-                    Client.Client.HandleFailure();
-                }
             }
             catch (SocketException e)
             {
@@ -110,7 +96,7 @@ namespace MinecraftClient
         {
             try
             {
-                while (client.Client.Connected)
+                while (packetClient.client.Client.Connected)
                 {
                     string text = ConsoleIO.ReadLine();
                     if (text.Length > 0 && text[0] == (char)0x00)
@@ -147,23 +133,6 @@ namespace MinecraftClient
             }
             catch (IOException) { }
             catch (NullReferenceException) { }
-        }
-
-        public void Disconnect()
-        {
-            if (handler != null)
-            {
-                handler.Disconnect();
-                handler.Dispose();
-            }
-
-            if (cmdprompt != null)
-                cmdprompt.Abort();
-
-            Thread.Sleep(1000);
-
-            if (client != null)
-                client.Close();
         }
 
         public void OnGameJoined()
@@ -231,9 +200,6 @@ namespace MinecraftClient
             return true;
         }
 
-        /// <summary>
-        /// Received some text from the server
-        /// </summary>
         public void OnTextReceived(string text, bool isJson)
         {
             List<string> links = new List<string>();
@@ -380,83 +346,25 @@ namespace MinecraftClient
             }
             return uuid2Player;
         }
+
         public void RegisterPluginChannel(string channel, ChatBot bot)
         {
-            if (registeredBotPluginChannels.ContainsKey(channel))
-            {
-                registeredBotPluginChannels[channel].Add(bot);
-            }
-            else
-            {
-                List<ChatBot> bots = new List<ChatBot>();
-                bots.Add(bot);
-                registeredBotPluginChannels[channel] = bots;
-                SendPluginChannelMessage("REGISTER", Encoding.UTF8.GetBytes(channel), true);
-            }
+            packetClient.RegisterPluginChannel(channel, bot);
         }
 
         public void UnregisterPluginChannel(string channel, ChatBot bot)
         {
-            if (registeredBotPluginChannels.ContainsKey(channel))
-            {
-                List<ChatBot> registeredBots = registeredBotPluginChannels[channel];
-                registeredBots.RemoveAll(item => object.ReferenceEquals(item, bot));
-                if (registeredBots.Count == 0)
-                {
-                    registeredBotPluginChannels.Remove(channel);
-                    SendPluginChannelMessage("UNREGISTER", Encoding.UTF8.GetBytes(channel), true);
-                }
-            }
+            packetClient.UnregisterPluginChannel(channel, bot);
         }
 
-        /// <summary>
-        /// Sends a plugin channel packet to the server.  See http://wiki.vg/Plugin_channel for more information
-        /// about plugin channels.
-        /// </summary>
         public bool SendPluginChannelMessage(string channel, byte[] data, bool sendEvenIfNotRegistered = false)
         {
-            if (!sendEvenIfNotRegistered)
-            {
-                if (!registeredBotPluginChannels.ContainsKey(channel))
-                {
-                    return false;
-                }
-                if (!registeredServerPluginChannels.Contains(channel))
-                {
-                    return false;
-                }
-            }
-            return handler.SendPluginChannelPacket(channel, data);
+            return packetClient.SendPluginChannelMessage(channel, data, sendEvenIfNotRegistered);
         }
+
         public void OnPluginChannelMessage(string channel, byte[] data)
         {
-            if (channel == "REGISTER")
-            {
-                string[] channels = Encoding.UTF8.GetString(data).Split('\0');
-                foreach (string chan in channels)
-                {
-                    if (!registeredServerPluginChannels.Contains(chan))
-                    {
-                        registeredServerPluginChannels.Add(chan);
-                    }
-                }
-            }
-            if (channel == "UNREGISTER")
-            {
-                string[] channels = Encoding.UTF8.GetString(data).Split('\0');
-                foreach (string chan in channels)
-                {
-                    registeredServerPluginChannels.Remove(chan);
-                }
-            }
-
-            if (registeredBotPluginChannels.ContainsKey(channel))
-            {
-                foreach (ChatBot bot in registeredBotPluginChannels[channel])
-                {
-                    bot.OnPluginMessage(channel, data);
-                }
-            }
+            packetClient.OnPluginChannelMessage(channel, data);
         }
     }
 }

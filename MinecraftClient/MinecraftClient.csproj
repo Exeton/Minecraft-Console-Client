@@ -106,6 +106,7 @@
     <Compile Include="Mapping\BlockPalettes\PaletteGenerator.cs" />
     <Compile Include="Mapping\BlockPalettes\PaletteMapping.cs" />
     <Compile Include="Mapping\MaterialExtensions.cs" />
+    <Compile Include="Net\PacketClient.cs" />
     <Compile Include="Net\Protocol\Handlers\DataTypes.cs" />
     <Compile Include="Net\Protocol\Handlers\PacketIncomingType.cs" />
     <Compile Include="Net\Protocol\Handlers\McVersion.cs" />
