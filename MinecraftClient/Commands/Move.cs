@@ -22,50 +22,37 @@ namespace MinecraftClient.Commands
         {
             McTcpClient handler = tcpClientRetriever.GetTcpClient();
 
-            if (argStr == "on")
+            if (args.Length == 1)
             {
-                handler.SetTerrainEnabled(true);
-                return "Enabling Terrain and Movements on next server login, respawn or world change.";
-            }
-            else if (argStr == "off")
-            {
-                handler.SetTerrainEnabled(false);
-                return "Disabling Terrain and Movements.";
-            }
-            else if (handler.GetTerrainEnabled())
-            {
-                if (args.Length == 1)
+
+                if (argStr == "get")
+                    return handler.player.GetCurrentLocation().ToString();
+
+                Direction direction = DirectionMethods.FromString(argStr);
+
+                if (Movement.CanMove(handler.GetWorld(), handler.player.GetCurrentLocation(), direction))
                 {
-
-                    if (argStr == "get")
-                        return handler.player.GetCurrentLocation().ToString();
-
-                    Direction direction = DirectionMethods.FromString(argStr);
-
-                    if (Movement.CanMove(handler.GetWorld(), handler.player.GetCurrentLocation(), direction))
-                    {
-                        //handler.player.MoveTo(Movement.Move(handler.player.GetCurrentLocation(), direction));
-                        return "Moving " + argStr + '.';
-                    }
-                    else return "Cannot move in that direction.";
+                    //handler.player.MoveTo(Movement.Move(handler.player.GetCurrentLocation(), direction));
+                    return "Moving " + argStr + '.';
                 }
-                else if (args.Length == 3)
-                {
-                    try
-                    {
-                        int x = int.Parse(args[0]);
-                        int y = int.Parse(args[1]);
-                        int z = int.Parse(args[2]);
-                        Location goal = new Location(x, y, z);
-                        //if (handler.player.MoveTo(goal))
-                           //return "Walking to " + goal;
-                        return "Failed to compute path to " + goal;
-                    }
-                    catch (FormatException) { return CMDDesc; }
-                }
-                else return CMDDesc;
+                else return "Cannot move in that direction.";
             }
-            else return "Please enable terrainandmovements to use this command.";
+            else if (args.Length == 3)
+            {
+                try
+                {
+                    int x = int.Parse(args[0]);
+                    int y = int.Parse(args[1]);
+                    int z = int.Parse(args[2]);
+                    Location goal = new Location(x, y, z);
+                    //if (handler.player.MoveTo(goal))
+                        //return "Walking to " + goal;
+                    return "Failed to compute path to " + goal;
+                }
+                catch (FormatException) { return CMDDesc; }
+            }
+            else return CMDDesc;
+
         }
     }
 }

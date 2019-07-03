@@ -20,7 +20,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
         }
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            if (protocolversion >= (int)McVersion.V19 && handler.GetTerrainEnabled())
+            if (protocolversion >= (int)McVersion.V19)
             {
                 int chunkX = dataTypes.ReadNextInt(packetData);
                 int chunkZ = dataTypes.ReadNextInt(packetData);

@@ -19,39 +19,38 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
         }
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            if (handler.GetTerrainEnabled())
+
+            int chunkX = dataTypes.ReadNextInt(packetData);
+            int chunkZ = dataTypes.ReadNextInt(packetData);
+            int recordCount = protocolversion < (int)McVersion.V18
+                ? (int)dataTypes.ReadNextShort(packetData)
+                : dataTypes.ReadNextVarInt(packetData);
+
+            for (int i = 0; i < recordCount; i++)
             {
-                int chunkX = dataTypes.ReadNextInt(packetData);
-                int chunkZ = dataTypes.ReadNextInt(packetData);
-                int recordCount = protocolversion < (int)McVersion.V18
-                    ? (int)dataTypes.ReadNextShort(packetData)
-                    : dataTypes.ReadNextVarInt(packetData);
+                byte locationXZ;
+                ushort blockIdMeta;
+                int blockY;
 
-                for (int i = 0; i < recordCount; i++)
+                if (protocolversion < (int)McVersion.V18)
                 {
-                    byte locationXZ;
-                    ushort blockIdMeta;
-                    int blockY;
-
-                    if (protocolversion < (int)McVersion.V18)
-                    {
-                        blockIdMeta = dataTypes.ReadNextUShort(packetData);
-                        blockY = (ushort)dataTypes.ReadNextByte(packetData);
-                        locationXZ = dataTypes.ReadNextByte(packetData);
-                    }
-                    else
-                    {
-                        locationXZ = dataTypes.ReadNextByte(packetData);
-                        blockY = (ushort)dataTypes.ReadNextByte(packetData);
-                        blockIdMeta = (ushort)dataTypes.ReadNextVarInt(packetData);
-                    }
-
-                    int blockX = locationXZ >> 4;
-                    int blockZ = locationXZ & 0x0F;
-                    Block block = new Block(blockIdMeta);
-                    handler.GetWorld().SetBlock(new Location(chunkX, chunkZ, blockX, blockY, blockZ), block);
+                    blockIdMeta = dataTypes.ReadNextUShort(packetData);
+                    blockY = (ushort)dataTypes.ReadNextByte(packetData);
+                    locationXZ = dataTypes.ReadNextByte(packetData);
                 }
+                else
+                {
+                    locationXZ = dataTypes.ReadNextByte(packetData);
+                    blockY = (ushort)dataTypes.ReadNextByte(packetData);
+                    blockIdMeta = (ushort)dataTypes.ReadNextVarInt(packetData);
+                }
+
+                int blockX = locationXZ >> 4;
+                int blockZ = locationXZ & 0x0F;
+                Block block = new Block(blockIdMeta);
+                handler.GetWorld().SetBlock(new Location(chunkX, chunkZ, blockX, blockY, blockZ), block);
             }
+            
             return true;
         }
     }

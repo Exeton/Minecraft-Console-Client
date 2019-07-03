@@ -18,9 +18,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            if (handler.GetTerrainEnabled())
-                handler.GetWorld().SetBlock(dataTypes.ReadNextLocation(packetData), new Block((ushort)dataTypes.ReadNextVarInt(packetData)));
-            
+            handler.GetWorld().SetBlock(dataTypes.ReadNextLocation(packetData), new Block((ushort)dataTypes.ReadNextVarInt(packetData)));         
             return true;
         }
     }

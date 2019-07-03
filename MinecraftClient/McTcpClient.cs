@@ -23,9 +23,6 @@ namespace MinecraftClient
 
         private readonly Dictionary<Guid, string> onlinePlayers = new Dictionary<Guid, string>();
 
-        public static bool terrainAndMovementsEnabled;
-        public static bool terrainAndMovementsRequested = false;
-
         public Player player;
         private World world = new World();
 
@@ -53,7 +50,6 @@ namespace MinecraftClient
 
         private void StartClient(string user, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo, List<IPlugin> plugins)
         {
-            terrainAndMovementsEnabled = Settings.TerrainAndMovements;
             this.sessionid = sessionID;
             this.host = server_ip;
             this.port = port;
@@ -156,48 +152,9 @@ namespace MinecraftClient
         /// </summary>
         public void OnRespawn()
         {
-            if (terrainAndMovementsRequested)
-            {
-                terrainAndMovementsEnabled = true;
-                terrainAndMovementsRequested = false;
-                ConsoleIO.WriteLogLine("Terrain and Movements is now enabled.");
-            }
-
-            if (terrainAndMovementsEnabled)
-            {
-                world.Clear();
-            }
-        }
-
-        public bool GetTerrainEnabled()
-        {
-            return terrainAndMovementsEnabled;
-        }
-
-        /// <summary>
-        /// Enable or disable Terrain and Movements.
-        /// Please note that Enabling will be deferred until next relog, respawn or world change.
-        /// </summary>
-        /// <param name="enabled">Enabled</param>
-        /// <returns>TRUE if the setting was applied immediately, FALSE if delayed.</returns>
-        public bool SetTerrainEnabled(bool enabled)
-        {
-            if (enabled)
-            {
-                if (!terrainAndMovementsEnabled)
-                {
-                    terrainAndMovementsRequested = true;
-                    return false;
-                }
-            }
-            else
-            {
-                terrainAndMovementsEnabled = false;
-                terrainAndMovementsRequested = false;
-                player.locationReceived = false;
-                world.Clear();
-            }
-            return true;
+            //Won't work with multiplayer
+            world.Clear();
+            
         }
 
         public void OnTextReceived(string text, bool isJson)

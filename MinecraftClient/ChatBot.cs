@@ -430,9 +430,7 @@ namespace MinecraftClient
         /// <returns>Minecraft world or null if associated setting is disabled</returns>
         protected Mapping.World GetWorld()
         {
-            if (Handler.GetTerrainEnabled())
-                return Handler.GetWorld();
-            return null;
+            return Handler.GetWorld();
         }
 
         /// <summary>

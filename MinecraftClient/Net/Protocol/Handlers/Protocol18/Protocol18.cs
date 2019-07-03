@@ -60,10 +60,10 @@ namespace MinecraftClient.Protocol.Handlers
             this.pForge = new Protocol18Forge(forgeInfo, protocolVersion, dataTypes, this, handler);
             this.pTerrain = new Protocol18Terrain(protocolVersion, dataTypes, handler);
 
-            if (handler.GetTerrainEnabled() && protocolversion > (int)McVersion.V1142)
+            if (protocolversion > (int)McVersion.V1142)
             {
                 ConsoleIO.WriteLineFormatted("§8Terrain & Movements currently not handled for that MC version.");
-                handler.SetTerrainEnabled(false);
+                //Modify client pool for terrain?
             }
 
             if (player.GetInventoryEnabled() && protocolversion > (int)McVersion.V114)
@@ -74,8 +74,6 @@ namespace MinecraftClient.Protocol.Handlers
 
             if (protocolversion >= (int)McVersion.V18)
             {
-                if (protocolVersion > (int)McVersion.V1142 && handler.GetTerrainEnabled())
-                    throw new NotImplementedException("Please update block types handling for this Minecraft version. See Material.cs");
                 if (protocolVersion >= (int)McVersion.V114)
                     Block.Palette = new Palette114();
                 else Block.Palette = new Palette113();
@@ -406,33 +404,29 @@ namespace MinecraftClient.Protocol.Handlers
         /// <returns>True if the location update was successfully sent</returns>
         public bool SendLocationUpdate(Location location, bool onGround, float? yaw = null, float? pitch = null)
         {
-            if (handler.GetTerrainEnabled())
+            byte[] yawpitch = new byte[0];
+            PacketOutgoingType packetType = PacketOutgoingType.PlayerPosition;
+
+            if (yaw.HasValue && pitch.HasValue)
             {
-                byte[] yawpitch = new byte[0];
-                PacketOutgoingType packetType = PacketOutgoingType.PlayerPosition;
-
-                if (yaw.HasValue && pitch.HasValue)
-                {
-                    yawpitch = dataTypes.ConcatBytes(dataTypes.GetFloat(yaw.Value), dataTypes.GetFloat(pitch.Value));
-                    packetType = PacketOutgoingType.PlayerPositionAndLook;
-                }
-
-                try
-                {
-                    packetReadWriter.WritePacket(packetType, dataTypes.ConcatBytes(
-                        dataTypes.GetDouble(location.X),
-                        dataTypes.GetDouble(location.Y),
-                        protocolversion < (int)McVersion.V18
-                            ? dataTypes.GetDouble(location.Y + 1.62)
-                            : new byte[0],
-                        dataTypes.GetDouble(location.Z),
-                        yawpitch,
-                        new byte[] { onGround ? (byte)1 : (byte)0 }));
-                    return true;
-                }
-                catch (SocketException) { return false; }
+                yawpitch = dataTypes.ConcatBytes(dataTypes.GetFloat(yaw.Value), dataTypes.GetFloat(pitch.Value));
+                packetType = PacketOutgoingType.PlayerPositionAndLook;
             }
-            else return false;
+
+            try
+            {
+                packetReadWriter.WritePacket(packetType, dataTypes.ConcatBytes(
+                    dataTypes.GetDouble(location.X),
+                    dataTypes.GetDouble(location.Y),
+                    protocolversion < (int)McVersion.V18
+                        ? dataTypes.GetDouble(location.Y + 1.62)
+                        : new byte[0],
+                    dataTypes.GetDouble(location.Z),
+                    yawpitch,
+                    new byte[] { onGround ? (byte)1 : (byte)0 }));
+                return true;
+            }
+            catch (SocketException) { return false; }
         }
 
         /// <summary>

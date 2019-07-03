@@ -25,49 +25,45 @@ namespace MinecraftClient.Commands
         {
             McTcpClient handler = tcpClientRetriever.GetTcpClient();
 
-            if (handler.GetTerrainEnabled())
+            if (args.Length == 1)
             {
-                if (args.Length == 1)
-                {
-                    string dirStr = args[0].Trim().ToLower();
-                    Direction direction = DirectionMethods.FromString(dirStr);
-                    if (direction == Direction.None)
-                        return "Invalid direction: " + dirStr;
+                string dirStr = args[0].Trim().ToLower();
+                Direction direction = DirectionMethods.FromString(dirStr);
+                if (direction == Direction.None)
+                    return "Invalid direction: " + dirStr;
 
-                    player.UpdateLocation(player.GetCurrentLocation(), direction);
-                    return "Looking " + dirStr;
-                }
-                else if (args.Length == 2)
-                {
-                    try
-                    {
-                        float yaw = Single.Parse(args[0]);
-                        float pitch = Single.Parse(args[1]);
-
-                        player.UpdateLocation(player.GetCurrentLocation(), yaw, pitch);
-                        return String.Format("Looking at YAW: {0} PITCH: {1}", yaw.ToString("0.00"), pitch.ToString("0.00"));
-                    }
-                    catch (FormatException) { return CMDDesc; }
-                }
-                else if (args.Length == 3)
-                {
-                    try
-                    {
-                        int x = int.Parse(args[0]);
-                        int y = int.Parse(args[1]);
-                        int z = int.Parse(args[2]);
-
-                        Location block = new Location(x, y, z);
-                        player.UpdateLocation(player.GetCurrentLocation(), block);
-
-                        return "Looking at " + block;
-                    }
-                    catch (FormatException) { return CMDDesc; }
-
-                }
-                else return CMDDesc;
+                player.UpdateLocation(player.GetCurrentLocation(), direction);
+                return "Looking " + dirStr;
             }
-            else return "Please enable terrainandmovements in config to use this command.";
+            else if (args.Length == 2)
+            {
+                try
+                {
+                    float yaw = Single.Parse(args[0]);
+                    float pitch = Single.Parse(args[1]);
+
+                    player.UpdateLocation(player.GetCurrentLocation(), yaw, pitch);
+                    return String.Format("Looking at YAW: {0} PITCH: {1}", yaw.ToString("0.00"), pitch.ToString("0.00"));
+                }
+                catch (FormatException) { return CMDDesc; }
+            }
+            else if (args.Length == 3)
+            {
+                try
+                {
+                    int x = int.Parse(args[0]);
+                    int y = int.Parse(args[1]);
+                    int z = int.Parse(args[2]);
+
+                    Location block = new Location(x, y, z);
+                    player.UpdateLocation(player.GetCurrentLocation(), block);
+
+                    return "Looking at " + block;
+                }
+                catch (FormatException) { return CMDDesc; }
+
+            }
+            else return CMDDesc;
         }
     }
 }

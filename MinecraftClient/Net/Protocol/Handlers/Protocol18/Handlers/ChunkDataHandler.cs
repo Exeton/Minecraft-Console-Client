@@ -24,30 +24,28 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            if (handler.GetTerrainEnabled())
+            int chunkX = dataTypes.ReadNextInt(packetData);
+            int chunkZ = dataTypes.ReadNextInt(packetData);
+            bool chunksContinuous = dataTypes.ReadNextBool(packetData);
+            ushort chunkMask = protocolversion >= (int)McVersion.V19
+                ? (ushort)dataTypes.ReadNextVarInt(packetData)
+                : dataTypes.ReadNextUShort(packetData);
+            if (protocolversion <  (int)McVersion.V18)
             {
-                int chunkX = dataTypes.ReadNextInt(packetData);
-                int chunkZ = dataTypes.ReadNextInt(packetData);
-                bool chunksContinuous = dataTypes.ReadNextBool(packetData);
-                ushort chunkMask = protocolversion >= (int)McVersion.V19
-                    ? (ushort)dataTypes.ReadNextVarInt(packetData)
-                    : dataTypes.ReadNextUShort(packetData);
-                if (protocolversion <  (int)McVersion.V18)
-                {
-                    ushort addBitmap = dataTypes.ReadNextUShort(packetData);
-                    int compressedDataSize = dataTypes.ReadNextInt(packetData);
-                    byte[] compressed = dataTypes.ReadData(compressedDataSize, packetData);
-                    byte[] decompressed = ZlibUtils.Decompress(compressed);
-                    pTerrain.ProcessChunkColumnData(chunkX, chunkZ, chunkMask, addBitmap, worldInfo.dimension == 0, chunksContinuous, worldInfo.dimension, new List<byte>(decompressed));
-                }
-                else
-                {
-                    if (protocolversion >= (int)McVersion.V114)
-                        dataTypes.ReadNextNbt(packetData);  // Heightmaps - 1.14 and above
-                    int dataSize = dataTypes.ReadNextVarInt(packetData);
-                    pTerrain.ProcessChunkColumnData(chunkX, chunkZ, chunkMask, 0, false, chunksContinuous, worldInfo.dimension, packetData);
-                }
+                ushort addBitmap = dataTypes.ReadNextUShort(packetData);
+                int compressedDataSize = dataTypes.ReadNextInt(packetData);
+                byte[] compressed = dataTypes.ReadData(compressedDataSize, packetData);
+                byte[] decompressed = ZlibUtils.Decompress(compressed);
+                pTerrain.ProcessChunkColumnData(chunkX, chunkZ, chunkMask, addBitmap, worldInfo.dimension == 0, chunksContinuous, worldInfo.dimension, new List<byte>(decompressed));
             }
+            else
+            {
+                if (protocolversion >= (int)McVersion.V114)
+                    dataTypes.ReadNextNbt(packetData);  // Heightmaps - 1.14 and above
+                int dataSize = dataTypes.ReadNextVarInt(packetData);
+                pTerrain.ProcessChunkColumnData(chunkX, chunkZ, chunkMask, 0, false, chunksContinuous, worldInfo.dimension, packetData);
+            }
+            
             return true;
         }
     }

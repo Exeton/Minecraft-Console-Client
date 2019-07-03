@@ -23,8 +23,6 @@ namespace MinecraftClient.Protocol
         string[] GetOnlinePlayers();
         Dictionary<string, string> GetOnlinePlayersWithUUID();
         World GetWorld();
-        bool GetTerrainEnabled();
-        bool SetTerrainEnabled(bool enabled);
 
         /// <summary>
         /// Called when a server was successfully joined
