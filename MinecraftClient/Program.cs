@@ -39,6 +39,7 @@ namespace MinecraftClient
         public static readonly string BuildInfo = null;
 
         private static Thread offlinePrompt = null;
+        static Thread commandHandler;
 
         static void Main(string[] args)
         {
@@ -75,10 +76,23 @@ namespace MinecraftClient
                 pass = loginPass.Value;
             }
 
+
+            string rootDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            List<IPlugin> plugins = PluginLoader.LoadPlugins(rootDir + "/plugins");
+
+            TickUpdater tickUpdater = new TickUpdater();
+
             ClientPool clientPool = new ClientPool();
             clientPool.createClient().InitializeClient(usr, pass);
             clientPool.createClient().InitializeClient(usr + "1", pass);
 
+            tickUpdater.addClientPool(clientPool);
+            tickUpdater.plugins.AddRange(plugins);
+
+
+            commandHandler = new Thread(new ThreadStart(ConsoleInputHandler));
+            commandHandler.Name = "MCC Command prompt";
+            commandHandler.Start();
         }
 
         static void PrepareConsole(bool keyboardDebug)
@@ -102,6 +116,51 @@ namespace MinecraftClient
                 Console.OutputEncoding = Console.InputEncoding = Encoding.UTF8;
             }
         }
+
+
+        private static void ConsoleInputHandler()
+        {
+            try
+            {
+                while (true)
+                {
+                    string text = ConsoleIO.ReadLine();
+                    if (text.Length > 0 && text[0] == (char)0x00)
+                    {
+                        //Process a request from the GUI
+                        string[] command = text.Substring(1).Split((char)0x00);
+                        switch (command[0].ToLower())
+                        {
+                            //case "autocomplete":
+                            //    if (command.Length > 1) { ConsoleIO.WriteLine((char)0x00 + "autocomplete" + (char)0x00 + handler.AutoComplete(command[1])); }
+                            //    else Console.WriteLine((char)0x00 + "autocomplete" + (char)0x00);
+                            //    break;
+                        }
+                    }
+                    else
+                    {
+                        text = text.Trim();
+                        if (text.Length > 0)
+                        {
+                            if (Settings.internalCmdChar == ' ' || text[0] == Settings.internalCmdChar)
+                            {
+                                string command = Settings.internalCmdChar == ' ' ? text : text.Substring(1);
+                                CommandHandler commandHandler = Program.CommandHandler;
+
+                                if (!commandHandler.runCommand(command) && Settings.internalCmdChar == '/')
+                                {
+                                    //SendText(text);
+                                }
+                            }
+                            //else SendText(text);
+                        }
+                    }
+                }
+            }
+            catch (IOException) { }
+            catch (NullReferenceException) { }
+        }
+
 
         public static void DisconnectAndExit()
         {

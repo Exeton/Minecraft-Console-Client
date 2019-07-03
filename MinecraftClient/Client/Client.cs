@@ -18,24 +18,15 @@ namespace MinecraftClient.Client
 
         public McTcpClient mcTcpClient;
         private static bool useMcVersionOnce = false;
-        public Client()
-        {
-
-        }
 
         public void InitializeClient(string usr, string pass)
         {
 
             SessionToken session;
-
             ProtocolHandler.LoginResult loginResult = tryAuthenticateSession(out session, usr, pass);
 
-            if (loginResult == ProtocolHandler.LoginResult.Success)
-            {
-                string rootDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                List<IPlugin> plugins = PluginLoader.LoadPlugins(rootDir + "/plugins");
-                startTcpClient(session, plugins);
-            }
+            if (loginResult == ProtocolHandler.LoginResult.Success)      
+                startTcpClient(session);        
             else
                 handleLoginFailure(loginResult);
         }
@@ -77,7 +68,7 @@ namespace MinecraftClient.Client
             return ProtocolHandler.LoginResult.LoginRequired;
         }
 
-        void startTcpClient(SessionToken session, List<IPlugin> plugins)
+        void startTcpClient(SessionToken session)
         {            
             if (Settings.ConsoleTitle != "")
                 Console.Title = Settings.ExpandVars(Settings.ConsoleTitle);
@@ -128,7 +119,7 @@ namespace MinecraftClient.Client
             {
                 try
                 {
-                    mcTcpClient = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, forgeInfo, plugins);
+                    mcTcpClient = new McTcpClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, forgeInfo);
 
                     //Update console title
                     if (Settings.ConsoleTitle != "")
@@ -207,6 +198,5 @@ namespace MinecraftClient.Client
             HandleFailure(failureMessage, false, ChatBot.DisconnectReason.LoginRejected);
 
         }
-
     }
 }

@@ -11,18 +11,7 @@ namespace MinecraftClient.Client
     {
 
         World world;
-        List<Client> clients = new List<Client>();
-
-        Timer tickLoop;
-
-        public ClientPool()
-        {
-            tickLoop = new Timer();
-            tickLoop.Interval = 1d / 20d;
-            tickLoop.AutoReset = true;
-            tickLoop.Elapsed += TickLoop_Elapsed;
-            tickLoop.Start();
-        }
+        public List<Client> clients = new List<Client>();
 
         public Client createClient()
         {
@@ -34,12 +23,7 @@ namespace MinecraftClient.Client
         }
 
 
-        private void TickLoop_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            foreach (Client client in clients)
-                if (client.mcTcpClient != null)
-                    client.mcTcpClient.OnUpdate();
-        }
+
 
         //Update
 

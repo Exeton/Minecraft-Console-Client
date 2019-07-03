@@ -30,7 +30,7 @@ namespace MinecraftClient
         private int port;
         private string sessionid;
 
-        List<IPlugin> plugins;
+
         PacketClient packetClient;
 
 
@@ -41,45 +41,29 @@ namespace MinecraftClient
         public World GetWorld() { return world; }
 
         public IMinecraftCom handler;
-        Thread cmdprompt;
 
-        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo, List<IPlugin> plugins)
+        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo)
         {
-            StartClient(username, uuid, sessionID, protocolversion, server_ip, port, forgeInfo, plugins);
+            StartClient(username, uuid, sessionID, protocolversion, server_ip, port, forgeInfo);
         }
 
-        private void StartClient(string user, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo, List<IPlugin> plugins)
+        private void StartClient(string user, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo)
         {
             this.sessionid = sessionID;
             this.host = server_ip;
             this.port = port;
-            this.plugins = plugins;
             player = new Player(world, user, uuid);
 
             try
             {
-
                 packetClient = new PacketClient();
-                bool connected = packetClient.Connect(new ServerConnectionInfo("127.0.0.1", 25565), player, protocolversion, forgeInfo, this);
-
-                if (!connected)
+                if (!packetClient.Connect(new ServerConnectionInfo(server_ip, port), player, protocolversion, forgeInfo, this))
                     return;
 
-                this.handler = packetClient.communicationHandler;
-
+                handler = packetClient.communicationHandler;
                 player.SetHandler(handler);
 
-                foreach (IPlugin plugin in plugins)
-                    plugin.OnJoin();
-
-                Console.WriteLine("Server was successfully joined.\nType '"
-                    + (Settings.internalCmdChar == ' ' ? "" : "" + Settings.internalCmdChar)
-                    + "quit' to leave the server.");
-
-                cmdprompt = new Thread(new ThreadStart(ConsoleInputHandler));
-                cmdprompt.Name = "MCC Command prompt";
-                cmdprompt.Start();
-
+                Console.WriteLine("Server was successfully joined.\nType '" + Settings.internalCmdChar + "quit' to leave the server.");
             }
             catch (SocketException e)
             {
@@ -88,49 +72,6 @@ namespace MinecraftClient
                 Client.Client.HandleFailure();
             }
         }
-        private void ConsoleInputHandler()
-        {
-            try
-            {
-                while (packetClient.client.Client.Connected)
-                {
-                    string text = ConsoleIO.ReadLine();
-                    if (text.Length > 0 && text[0] == (char)0x00)
-                    {
-                        //Process a request from the GUI
-                        string[] command = text.Substring(1).Split((char)0x00);
-                        switch (command[0].ToLower())
-                        {
-                            case "autocomplete":
-                                if (command.Length > 1) { ConsoleIO.WriteLine((char)0x00 + "autocomplete" + (char)0x00 + handler.AutoComplete(command[1])); }
-                                else Console.WriteLine((char)0x00 + "autocomplete" + (char)0x00);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        text = text.Trim();
-                        if (text.Length > 0)
-                        {
-                            if (Settings.internalCmdChar == ' ' || text[0] == Settings.internalCmdChar)
-                            {
-                                string command = Settings.internalCmdChar == ' ' ? text : text.Substring(1);
-                                CommandHandler commandHandler = Program.CommandHandler;
-
-                                if (!commandHandler.runCommand(command) && Settings.internalCmdChar == '/')
-                                {
-                                    SendText(text);
-                                }
-                            }
-                            else SendText(text);
-                        }
-                    }
-                }
-            }
-            catch (IOException) { }
-            catch (NullReferenceException) { }
-        }
-
         public void OnGameJoined()
         {
             if (!String.IsNullOrWhiteSpace(Settings.BrandInfo))
@@ -152,11 +93,10 @@ namespace MinecraftClient
         /// </summary>
         public void OnRespawn()
         {
-            //Won't work with multiplayer
+            //Won't work with connection pool
             world.Clear();
             
         }
-
         public void OnTextReceived(string text, bool isJson)
         {
             List<string> links = new List<string>();
@@ -165,18 +105,12 @@ namespace MinecraftClient
             {
                 json = text;
                 text = ChatParser.ParseText(json, links);
-
-                foreach (IPlugin plugin in plugins)
-                {
-                    plugin.OnText(text);
-                }
             }
             ConsoleIO.WriteLineFormatted(text, true);
             if (Settings.DisplayChatLinks)
                 foreach (string link in links)
                     ConsoleIO.WriteLineFormatted("§8MCC: Link: " + link, false);
         }
-
         public void OnConnectionLost(ChatBot.DisconnectReason reason, string message)
         {
             world.Clear();
@@ -205,25 +139,9 @@ namespace MinecraftClient
                 Client.Client.HandleFailure();
         }
 
-        /// <summary>
-        /// Called ~10 times per second by the protocol handler
-        /// </summary>
+        //Ticks 20 times per second
         public void OnUpdate()
         {
-            foreach (IPlugin plugin in plugins)
-            {
-                try
-                {
-                    plugin.OnUpdate();
-                }
-                catch (Exception e)
-                {
-                    ConsoleIO.WriteLineFormatted("§8Update: Got error from " + plugin.ToString() + ": " + e.ToString());
-                    if (e is ThreadAbortException)
-                        throw;
-                }
-            }
-
             player.OnUpdate();
         }
 

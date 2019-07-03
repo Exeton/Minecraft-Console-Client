@@ -85,6 +85,7 @@
     <Compile Include="ChatBot.cs" />
     <Compile Include="Client\Client.cs" />
     <Compile Include="Client\ClientPool.cs" />
+    <Compile Include="Client\TickUpdater.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Commands\CommandHandler.cs" />
     <Compile Include="Commands\Connect.cs" />
