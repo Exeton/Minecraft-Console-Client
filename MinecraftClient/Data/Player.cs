@@ -26,9 +26,6 @@ namespace MinecraftClient.Data
         private bool inventoryHandlingRequested = false;
 
         private double motionY;
-        //Refactor into player controler class
-        private Queue<Location> steps;
-        private Queue<Location> path;
         IMinecraftCom handler;
 
         public void SetHandler(IMinecraftCom handler)
@@ -55,49 +52,11 @@ namespace MinecraftClient.Data
         /// <param name="location">Location to reach</param>
         /// <param name="allowUnsafe">Allow possible but unsafe locations</param>
         /// <returns>True if a path has been found</returns>
-        public bool MoveTo(Location location, bool allowUnsafe = false)
-        {
-            lock (locationLock)
-            {
-                if (Movement.GetAvailableMoves(world, location, allowUnsafe).Contains(location))
-                    path = new Queue<Location>(new[] { location });
-                else path = Movement.CalculatePath(world, location, location, allowUnsafe);
-                return path != null;
-            }
-        }
+
         public void OnUpdate()
         {
-            if (McTcpClient.terrainAndMovementsEnabled && locationReceived)
-            {
-                lock (locationLock)
-                {
-                    for (int i = 0; i < 2; i++) //Needs to run at 20 tps; MCC runs at 10 tps
-                    {
-                        if (yaw == null || pitch == null)
-                        {
-                            if (steps != null && steps.Count > 0)
-                            {
-                                location = steps.Dequeue();
-                            }
-                            else if (path != null && path.Count > 0)
-                            {
-                                Location next = path.Dequeue();
-                                steps = Movement.Move2Steps(location, next, ref motionY);
-                                UpdateLocation(location, next + new Location(0, 1, 0)); // Update yaw and pitch to look at next step
-                            }
-                            else
-                            {
-                                location = Movement.HandleGravity(world, location, ref motionY);
-                            }
-                        }
-                        handler.SendLocationUpdate(location, Movement.IsOnGround(world, location), yaw, pitch);
-                    }
-                    // First 2 updates must be player position AND look, and player must not move (to conform with vanilla)
-                    // Once yaw and pitch have been sent, switch back to location-only updates (without yaw and pitch)
-                    yaw = null;
-                    pitch = null;
-                }
-            }
+            location = Movement.HandleGravity(world, location, ref motionY);
+            handler.SendLocationUpdate(location, false, null, null);
         }
         public void UpdateLocation(Location location, bool relative)
         {

@@ -20,13 +20,6 @@ namespace MinecraftClient
         //Minecraft Console Client client information used for BrandInfo setting
         private const string MCCBrandInfo = "Minecraft-Console-Client/" + Program.Version;
 
-        //Main Settings.
-        //Login: Username or email adress used as login for Minecraft/Mojang account
-        //Username: The actual username of the user, obtained after login to the account
-        public static string Login = "";
-        public static string Username = "";
-        public static string Password = "";
-
         public static ServerConnectionInfo ServerConnectionInfo = new ServerConnectionInfo("localhost", 25565);
         public static string ConsoleTitle = "";
 
@@ -80,7 +73,6 @@ namespace MinecraftClient
         public static string Language = "en_GB";
         public static bool interactiveMode = true;
         public static char internalCmdChar = '/';
-        public static bool playerHeadAsIcon = false;
         public static string chatbotLogFile = "";
         public static bool CacheScripts = true;
         public static string BrandInfo = MCCBrandInfo;
@@ -160,14 +152,11 @@ namespace MinecraftClient
                                         case ParseMode.Main:
                                             switch (argName.ToLower())
                                             {
-                                                case "login": Login = argValue; break;
-                                                case "password": Password = argValue; break;
                                                 case "serverip": if (!SetServerIP(argValue)) serverAlias = argValue; ; break;
                                                 case "language": Language = argValue; break;
                                                 case "consoletitle": ConsoleTitle = argValue; break;
                                                 case "timestamps": ConsoleIO.EnableTimestamps = str2bool(argValue); break;
                                                 case "exitonfailure": interactiveMode = !str2bool(argValue); break;
-                                                case "playerheadicon": playerHeadAsIcon = str2bool(argValue); break;
                                                 case "chatbotlogfile": chatbotLogFile = argValue; break;
                                                 case "mcversion": ServerConnectionInfo.ServerVersion = argValue; break;
                                                 case "splitmessagedelay": splitMessageDelay = TimeSpan.FromSeconds(str2int(argValue)); break;
@@ -567,7 +556,6 @@ namespace MinecraftClient
 
                         switch (varname_lower)
                         {
-                            case "username": result.Append(Username); break;
                             case "serverip": result.Append(ServerConnectionInfo.ServerIP); break;
                             case "serverport": result.Append(ServerConnectionInfo.ServerPort); break;
                             default:

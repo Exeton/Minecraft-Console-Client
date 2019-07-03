@@ -110,7 +110,6 @@ namespace MinecraftClient.Protocol.Handlers
 
         private bool Update()
         {
-            handler.OnUpdate();
             if (!connectionInfo.socketWrapper.IsConnected())
                 return false;
             try

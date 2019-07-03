@@ -13,6 +13,7 @@ using MinecraftClient.API;
 using System.IO;
 using static MinecraftClient.ChatBot;
 using MinecraftClient.SingleLogin;
+using MinecraftClient.Client;
 
 namespace MinecraftClient
 {
@@ -42,8 +43,8 @@ namespace MinecraftClient
         static void Main(string[] args)
         {
             //Only code specific to the Console UI should go in here. For example, the console color settings, etc. 
-
             Console.WriteLine("Console Client for MC {0} to {1} - v{2} - By ORelio & Contributors", MCLowestVersion, MCHighestVersion, Version);
+
 
             CommandHandler = new CommandHandler();
             CommandHandler.addCommand("connect", new Connect());
@@ -54,24 +55,30 @@ namespace MinecraftClient
             bool keyboardDebug = (args.Length >= 1) && (args[0] == "--keyboard-debug");
             PrepareConsole(keyboardDebug);
 
-            if (Settings.ConsoleTitle != "")
-            {
-                Settings.Username = "New Window";
+
+            string login = "";
+            string pass = "";
+            string usr = "";
+
+            if (Settings.ConsoleTitle != "")           
                 Console.Title = Settings.ExpandVars(Settings.ConsoleTitle);
-            }
+            
 
             if (Settings.SessionCaching == CacheType.Disk)           
                 SessionCache.InitializeDiskCache();
 
-
-            if ((Settings.SessionCaching == CacheType.None || !SessionCache.Contains(Settings.Login.ToLower())))
+            if ((Settings.SessionCaching == CacheType.None || !SessionCache.Contains(login.ToLower())))
             {
                 KeyValuePair<string, string> loginPass = new PromptSingleLoginRetriever().GetUserAndPass();
-                Settings.Login = loginPass.Key;
-                Settings.Password = loginPass.Value;
+                login = loginPass.Key;
+                usr = login;
+                pass = loginPass.Value;
             }
 
-            new Client.Client().InitializeClient();
+            ClientPool clientPool = new ClientPool();
+            clientPool.createClient().InitializeClient(usr, pass);
+            clientPool.createClient().InitializeClient(usr + "1", pass);
+
         }
 
         static void PrepareConsole(bool keyboardDebug)
@@ -102,7 +109,6 @@ namespace MinecraftClient
             {
                 //if (Client != null) { Client.Disconnect(); ConsoleIO.Reset(); }
                 if (offlinePrompt != null) { offlinePrompt.Abort(); offlinePrompt = null; ConsoleIO.Reset(); }
-                if (Settings.playerHeadAsIcon) { ConsoleIcon.revertToCMDIcon(); }
                 Environment.Exit(0);
             })).Start();
         }

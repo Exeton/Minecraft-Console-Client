@@ -44,7 +44,7 @@ namespace MinecraftClient.Commands
 
                     if (Movement.CanMove(handler.GetWorld(), handler.player.GetCurrentLocation(), direction))
                     {
-                        handler.player.MoveTo(Movement.Move(handler.player.GetCurrentLocation(), direction));
+                        //handler.player.MoveTo(Movement.Move(handler.player.GetCurrentLocation(), direction));
                         return "Moving " + argStr + '.';
                     }
                     else return "Cannot move in that direction.";
@@ -57,8 +57,8 @@ namespace MinecraftClient.Commands
                         int y = int.Parse(args[1]);
                         int z = int.Parse(args[2]);
                         Location goal = new Location(x, y, z);
-                        if (handler.player.MoveTo(goal))
-                            return "Walking to " + goal;
+                        //if (handler.player.MoveTo(goal))
+                           //return "Walking to " + goal;
                         return "Failed to compute path to " + goal;
                     }
                     catch (FormatException) { return CMDDesc; }

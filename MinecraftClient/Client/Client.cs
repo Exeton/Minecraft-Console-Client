@@ -16,19 +16,19 @@ namespace MinecraftClient.Client
     class Client
     {
 
-        McTcpClient mcTcpClient;
+        public McTcpClient mcTcpClient;
         private static bool useMcVersionOnce = false;
         public Client()
         {
 
         }
 
-        public void InitializeClient()
+        public void InitializeClient(string usr, string pass)
         {
 
-            //Login to minecraft auth servers
-            SessionToken session = new SessionToken();
-            ProtocolHandler.LoginResult loginResult = tryAuthenticateSession(session);
+            SessionToken session;
+
+            ProtocolHandler.LoginResult loginResult = tryAuthenticateSession(out session, usr, pass);
 
             if (loginResult == ProtocolHandler.LoginResult.Success)
             {
@@ -40,20 +40,23 @@ namespace MinecraftClient.Client
                 handleLoginFailure(loginResult);
         }
 
-        private ProtocolHandler.LoginResult tryAuthenticateSession(SessionToken session)
+        private ProtocolHandler.LoginResult tryAuthenticateSession(out SessionToken session, string usr, string pass)
         {
-            if (Settings.Password == "-")
+
+            session = new SessionToken();
+
+            if (pass == "-")
             {
                 ConsoleIO.WriteLineFormatted("§8You chose to run in offline mode.");
                 session.PlayerID = "0";
-                session.PlayerName = Settings.Login;
+                session.PlayerName = usr;
                 return ProtocolHandler.LoginResult.Success;
             }
 
-            if (Settings.SessionCaching == CacheType.None || !SessionCache.Contains(Settings.Login.ToLower()))
+            if (Settings.SessionCaching == CacheType.None || !SessionCache.Contains(usr.ToLower()))
                 return ProtocolHandler.LoginResult.LoginRequired;
 
-            session = SessionCache.Get(Settings.Login.ToLower());
+            session = SessionCache.Get(usr.ToLower());
             if (ProtocolHandler.GetTokenValidation(session) == ProtocolHandler.LoginResult.Success)
             {
                 ConsoleIO.WriteLineFormatted("§8Cached session is still valid for " + session.PlayerName + '.');
@@ -65,9 +68,9 @@ namespace MinecraftClient.Client
             //RequestPassword();
 
             Console.WriteLine("Connecting to Minecraft.net...");
-            if (ProtocolHandler.GetLogin(Settings.Login, Settings.Password, out session) == ProtocolHandler.LoginResult.Success && Settings.SessionCaching != CacheType.None)
+            if (ProtocolHandler.GetLogin(usr, pass, out session) == ProtocolHandler.LoginResult.Success && Settings.SessionCaching != CacheType.None)
             {
-                SessionCache.Store(Settings.Login.ToLower(), session);
+                SessionCache.Store(usr.ToLower(), session);
                 return ProtocolHandler.LoginResult.Success;
             }
 
@@ -75,14 +78,9 @@ namespace MinecraftClient.Client
         }
 
         void startTcpClient(SessionToken session, List<IPlugin> plugins)
-        {
-            Settings.Username = session.PlayerName;
-
+        {            
             if (Settings.ConsoleTitle != "")
                 Console.Title = Settings.ExpandVars(Settings.ConsoleTitle);
-
-            if (Settings.playerHeadAsIcon)
-                ConsoleIcon.setPlayerIconAsync(Settings.Username);
 
             if (Settings.DebugMessages)
                 Console.WriteLine("Success. (session ID: " + session.ID + ')');

@@ -10,6 +10,7 @@ namespace MinecraftClient.Data
     interface IPlayer
     {
 
+
         string GetUsername();
         string GetUserUUID();
 
