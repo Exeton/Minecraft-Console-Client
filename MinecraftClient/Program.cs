@@ -38,6 +38,9 @@ namespace MinecraftClient
         public const string MCHighestVersion = "1.14.2";
         public static readonly string BuildInfo = null;
 
+
+        public static ClientPool ClientPool;
+
         private static Thread offlinePrompt = null;
         static Thread commandHandler;
 
@@ -76,18 +79,18 @@ namespace MinecraftClient
                 pass = loginPass.Value;
             }
 
-
             string rootDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             List<IPlugin> plugins = PluginLoader.LoadPlugins(rootDir + "/plugins");
 
             TickUpdater tickUpdater = new TickUpdater();
 
-            ClientPool clientPool = new ClientPool();
-            clientPool.createClient().InitializeClient(usr, pass);
-            clientPool.createClient().InitializeClient(usr + "1", pass);
+            ClientPool = new ClientPool();
+            ClientPool.createClient().InitializeClient(usr, pass);
+            //ClientPool.createClient().InitializeClient(usr + "1", pass);
 
-            tickUpdater.addClientPool(clientPool);
+            tickUpdater.addClientPool(ClientPool);
             tickUpdater.plugins.AddRange(plugins);
+            tickUpdater.start();
 
 
             commandHandler = new Thread(new ThreadStart(ConsoleInputHandler));
@@ -116,7 +119,6 @@ namespace MinecraftClient
                 Console.OutputEncoding = Console.InputEncoding = Encoding.UTF8;
             }
         }
-
 
         private static void ConsoleInputHandler()
         {
@@ -160,7 +162,6 @@ namespace MinecraftClient
             catch (IOException) { }
             catch (NullReferenceException) { }
         }
-
 
         public static void DisconnectAndExit()
         {

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MinecraftClient.Data
 {
-    interface IPlayer
+    public interface IPlayer
     {
 
 

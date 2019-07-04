@@ -13,33 +13,6 @@ namespace MinecraftClient.Mapping
         /* ========= PATHFINDING METHODS ========= */
 
         /// <summary>
-        /// Handle movements due to gravity
-        /// </summary>
-        /// <param name="world">World the player is currently located in</param>
-        /// <param name="location">Location the player is currently at</param>
-        /// <param name="motionY">Current vertical motion speed</param>
-        /// <returns>Updated location after applying gravity</returns>
-        public static Location HandleGravity(World world, Location location, ref double motionY)
-        {
-            Location onFoots = new Location(location.X, Math.Floor(location.Y), location.Z);
-            Location belowFoots = Move(location, Direction.Down);
-            if (location.Y > Math.Truncate(location.Y) + 0.0001)
-            {
-                belowFoots = location;
-                belowFoots.Y = Math.Truncate(location.Y);
-            }
-            if (!IsOnGround(world, location) && !IsSwimming(world, location))
-            {
-                while (!IsOnGround(world, belowFoots) && belowFoots.Y >= 1)
-                    belowFoots = Move(belowFoots, Direction.Down);
-                location = Move2Steps(location, belowFoots, ref motionY, true).Dequeue();
-            }
-            else if (!(world.GetBlock(onFoots).Type.IsSolid()))
-                location = Move2Steps(location, onFoots, ref motionY, true).Dequeue();
-            return location;
-        }
-
-        /// <summary>
         /// Return a list of possible moves for the player
         /// </summary>
         /// <param name="world">World the player is currently located in</param>
@@ -52,15 +25,15 @@ namespace MinecraftClient.Mapping
             if (IsOnGround(world, location) || IsSwimming(world, location))
             {
                 foreach (Direction dir in Enum.GetValues(typeof(Direction)))
-                    if (CanMove(world, location, dir) && (allowUnsafe || IsSafe(world, Move(location, dir))))
-                        availableMoves.Add(Move(location, dir));
+                    if (CanMove(world, location, dir) && (allowUnsafe || IsSafe(world, location.Move(dir))))
+                        availableMoves.Add(location.Move(dir));
             }
             else
             {
                 foreach (Direction dir in new []{ Direction.East, Direction.West, Direction.North, Direction.South })
-                    if (CanMove(world, location, dir) && IsOnGround(world, Move(location, dir)) && (allowUnsafe || IsSafe(world, Move(location, dir))))
-                        availableMoves.Add(Move(location, dir));
-                availableMoves.Add(Move(location, Direction.Down));
+                    if (CanMove(world, location, dir) && IsOnGround(world, location.Move(dir)) && (allowUnsafe || IsSafe(world, location.Move(dir))))
+                        availableMoves.Add(location.Move(dir));
+                availableMoves.Add(location.Move(Direction.Down));
             }
             return availableMoves;
         }
@@ -87,8 +60,6 @@ namespace MinecraftClient.Mapping
             {
                 //Use MC-Like falling algorithm
                 double Y = start.Y;
-                Queue<Location> fallSteps = new Queue<Location>();
-                fallSteps.Enqueue(start);
                 double motionPrev = motionY;
                 motionY -= 0.08D;
                 motionY *= 0.9800000190734863D;
@@ -194,7 +165,7 @@ namespace MinecraftClient.Mapping
         /// <returns>True if the specified location is on the ground</returns>
         public static bool IsOnGround(World world, Location location)
         {
-            return world.GetBlock(Move(location, Direction.Down)).Type.IsSolid()
+            return world.GetBlock(location.Move(Direction.Down)).Type.IsSolid()
                 && (location.Y <= Math.Truncate(location.Y) + 0.0001);
         }
 
@@ -220,16 +191,16 @@ namespace MinecraftClient.Mapping
             return
                 //No block that can harm the player
                    !world.GetBlock(location).Type.CanHarmPlayers()
-                && !world.GetBlock(Move(location, Direction.Up)).Type.CanHarmPlayers()
-                && !world.GetBlock(Move(location, Direction.Down)).Type.CanHarmPlayers()
+                && !world.GetBlock(location.Move(Direction.Up)).Type.CanHarmPlayers()
+                && !world.GetBlock(location.Move(Direction.Down)).Type.CanHarmPlayers()
 
                 //No fall from a too high place
-                && (world.GetBlock(Move(location, Direction.Down)).Type.IsSolid()
-                     || world.GetBlock(Move(location, Direction.Down, 2)).Type.IsSolid()
-                     || world.GetBlock(Move(location, Direction.Down, 3)).Type.IsSolid())
+                && (world.GetBlock(location.Move(Direction.Down)).Type.IsSolid()
+                     || world.GetBlock(location.Move(Direction.Down, 2)).Type.IsSolid()
+                     || world.GetBlock(location.Move(Direction.Down, 3)).Type.IsSolid())
 
                 //Not an underwater location
-                && !(world.GetBlock(Move(location, Direction.Up)).Type.IsLiquid());
+                && !(world.GetBlock(location.Move(Direction.Up)).Type.IsLiquid());
         }
 
         /* ========= SIMPLE MOVEMENTS ========= */
@@ -248,52 +219,14 @@ namespace MinecraftClient.Mapping
                 case Direction.Down:
                     return !IsOnGround(world, location);
                 case Direction.Up:
-                    return (IsOnGround(world, location) || IsSwimming(world, location))
-                        && !world.GetBlock(Move(Move(location, Direction.Up), Direction.Up)).Type.IsSolid();
+                    return (IsOnGround(world, location) || IsSwimming(world, location))                        
+                        && !world.GetBlock(location.Move(Direction.Up, 2)).Type.IsSolid();
                 case Direction.East:
                 case Direction.West:
                 case Direction.South:
                 case Direction.North:
-                    return !world.GetBlock(Move(location, direction)).Type.IsSolid()
-                        && !world.GetBlock(Move(Move(location, direction), Direction.Up)).Type.IsSolid();
-                default:
-                    throw new ArgumentException("Unknown direction", "direction");
-            }
-        }
-
-        /// <summary>
-        /// Get an updated location for moving in the specified direction
-        /// </summary>
-        /// <param name="location">Current location</param>
-        /// <param name="direction">Direction to move to</param>
-        /// <param name="length">Distance, in blocks</param>
-        /// <returns>Updated location</returns>
-        public static Location Move(Location location, Direction direction, int length = 1)
-        {
-            return location + Move(direction) * length;
-        }
-
-        /// <summary>
-        /// Get a location delta for moving in the specified direction
-        /// </summary>
-        /// <param name="direction">Direction to move to</param>
-        /// <returns>A location delta for moving in that direction</returns>
-        public static Location Move(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.Down:
-                    return new Location(0, -1, 0);
-                case Direction.Up:
-                    return new Location(0, 1, 0);
-                case Direction.East:
-                    return new Location(1, 0, 0);
-                case Direction.West:
-                    return new Location(-1, 0, 0);
-                case Direction.South:
-                    return new Location(0, 0, 1);
-                case Direction.North:
-                    return new Location(0, 0, -1);
+                    return !world.GetBlock(location.Move(direction)).Type.IsSolid()
+                        && !world.GetBlock(location.Move(direction).Move(Direction.Up)).Type.IsSolid();
                 default:
                     throw new ArgumentException("Unknown direction", "direction");
             }

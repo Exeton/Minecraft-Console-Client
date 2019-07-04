@@ -1,4 +1,5 @@
-﻿using MinecraftClient.Data;
+﻿using MinecraftClient.Client;
+using MinecraftClient.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,17 +9,9 @@ namespace MinecraftClient.API
 {
     public class ConsoleAPI
     {
-        public static McTcpClient GetTcpClient()
+        public static ClientPool GetClientPool()
         {
-            //return Program.Client;
-            return null;
+            return Program.ClientPool;
         }
-
-        public static Player GetPlayer()
-        {
-            //return Program.Client.player;
-            return null;
-        }
-
     }
 }

@@ -69,6 +69,27 @@ namespace MinecraftClient.Mapping
         }
 
 
+        public static Location ToVector(this Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.Down:
+                    return new Location(0, -1, 0);
+                case Direction.Up:
+                    return new Location(0, 1, 0);
+                case Direction.East:
+                    return new Location(1, 0, 0);
+                case Direction.West:
+                    return new Location(-1, 0, 0);
+                case Direction.South:
+                    return new Location(0, 0, 1);
+                case Direction.North:
+                    return new Location(0, 0, -1);
+                default:
+                    throw new ArgumentException("Unknown direction", "direction");
+            }
+        }
+
     }
 
 }

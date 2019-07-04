@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace MinecraftClient.Client
 {
-    class ClientPool
+    public class ClientPool
     {
 
         World world;
@@ -21,14 +21,6 @@ namespace MinecraftClient.Client
             
             return client;
         }
-
-
-
-
-        //Update
-
-
-
 
     }
 }

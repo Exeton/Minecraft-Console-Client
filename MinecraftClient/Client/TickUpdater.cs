@@ -14,7 +14,6 @@ namespace MinecraftClient.Client
         public List<IPlugin> plugins = new List<IPlugin>();
         Timer tickLoop;
 
-
         public void addClientPool(ClientPool clientPool)
         {
             clientPools.Add(clientPool);
@@ -23,7 +22,7 @@ namespace MinecraftClient.Client
         public void start()
         {
             tickLoop = new Timer();
-            tickLoop.Interval = 1d / 20d;
+            tickLoop.Interval = 1000 / 22;//Tick at slightly faster than 20tps to compensate for System.Timers inaccuracy.
             tickLoop.AutoReset = true;
             tickLoop.Elapsed += TickLoop_Elapsed;
             tickLoop.Start();
@@ -31,6 +30,7 @@ namespace MinecraftClient.Client
 
         private void TickLoop_Elapsed(object sender, ElapsedEventArgs e)
         {
+            //Add compesation code to make sure this runs at 20tps
             UpdateClients();
             UpdatePlugins();
         }

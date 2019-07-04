@@ -13,7 +13,7 @@ using static MinecraftClient.ChatBot;
 
 namespace MinecraftClient.Client
 {
-    class Client
+    public class Client
     {
 
         public McTcpClient mcTcpClient;

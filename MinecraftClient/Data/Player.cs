@@ -2,6 +2,7 @@
 using MinecraftClient.Protocol;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -27,6 +28,9 @@ namespace MinecraftClient.Data
 
         private double motionY;
         IMinecraftCom handler;
+
+        int ticks = 0;
+        Stopwatch stopwatch = new Stopwatch();
 
         public void SetHandler(IMinecraftCom handler)
         {
@@ -55,9 +59,40 @@ namespace MinecraftClient.Data
 
         public void OnUpdate()
         {
-            location = Movement.HandleGravity(world, location, ref motionY);
+            UpdateLocation();
             handler.SendLocationUpdate(location, false, null, null);
         }
+
+
+        private void UpdateLocation()
+        {
+
+            if (!stopwatch.IsRunning)
+                stopwatch.Start();
+
+            double ticksPerSecond = ticks / stopwatch.Elapsed.TotalSeconds;
+            ticks++;
+
+            Location onFoots = new Location(location.X, Math.Floor(location.Y), location.Z);
+            Location belowFoots = location.Move(Direction.Down);
+            if (location.Y > Math.Truncate(location.Y) + 0.0001)
+            {
+                belowFoots = location;
+                belowFoots.Y = Math.Truncate(location.Y);
+            }
+            if (!Movement.IsOnGround(world, location) && !Movement.IsSwimming(world, location))
+            {
+                while (!Movement.IsOnGround(world, belowFoots) && belowFoots.Y >= 1)
+                    belowFoots = belowFoots.Move(Direction.Down);
+                location = Movement.Move2Steps(location, belowFoots, ref motionY, true).Dequeue();
+            }
+            else if (!world.GetBlock(onFoots).Type.IsSolid())
+            {
+                location = Movement.Move2Steps(location, onFoots, ref motionY, false).Dequeue();
+                motionY = 0;
+            }
+        }
+
         public void UpdateLocation(Location location, bool relative)
         {
             lock (locationLock)

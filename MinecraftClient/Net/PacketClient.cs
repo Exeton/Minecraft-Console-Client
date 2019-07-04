@@ -34,7 +34,6 @@ namespace MinecraftClient.Net
             //send login packets
         }
 
-
         private bool login()
         {
 

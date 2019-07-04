@@ -14,6 +14,7 @@ using MinecraftClient.Data;
 using MinecraftClient.API;
 using MinecraftClient.Net;
 using MinecraftClient.View;
+using System.Diagnostics;
 
 namespace MinecraftClient
 {

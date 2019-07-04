@@ -127,6 +127,11 @@ namespace MinecraftClient.Mapping
             }
         }
 
+        public Location Move(Direction direction, int length = 1)
+        {
+            return this + direction.ToVector() * length;
+        }
+
         /// <summary>
         /// Get a squared distance to the specified location
         /// </summary>
