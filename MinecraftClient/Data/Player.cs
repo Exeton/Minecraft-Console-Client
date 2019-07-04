@@ -63,34 +63,58 @@ namespace MinecraftClient.Data
             handler.SendLocationUpdate(location, false, null, null);
         }
 
-
         private void UpdateLocation()
         {
-
             if (!stopwatch.IsRunning)
                 stopwatch.Start();
 
             double ticksPerSecond = ticks / stopwatch.Elapsed.TotalSeconds;
             ticks++;
 
-            Location onFoots = new Location(location.X, Math.Floor(location.Y), location.Z);
-            Location belowFoots = location.Move(Direction.Down);
-            if (location.Y > Math.Truncate(location.Y) + 0.0001)
+            HandleGravity();
+
+            //Check for block intersections
+
+            Location blockPlayerInsideOf = new Location(location.X, Math.Floor(location.Y), location.Z);
+            Location blockUnderPlayer = blockPlayerInsideOf.Move(Direction.Down);
+            double distAboveBlock = location.Y - Math.Floor(location.Y);
+            if (distAboveBlock + motionY < 0 && world.GetBlock(blockUnderPlayer).Type != Material.Air)         //Add swimming check
             {
-                belowFoots = location;
-                belowFoots.Y = Math.Truncate(location.Y);
+                location = blockPlayerInsideOf;
             }
-            if (!Movement.IsOnGround(world, location) && !Movement.IsSwimming(world, location))
+            else
             {
-                while (!Movement.IsOnGround(world, belowFoots) && belowFoots.Y >= 1)
-                    belowFoots = belowFoots.Move(Direction.Down);
-                location = Movement.Move2Steps(location, belowFoots, ref motionY, true).Dequeue();
+                location += (Direction.Up.ToVector() * motionY);
             }
-            else if (!world.GetBlock(onFoots).Type.IsSolid())
+
+            //if (!Movement.IsOnGround(world, location) && !Movement.IsSwimming(world, location))
+            //{
+            //    while (!Movement.IsOnGround(world, belowFoots) && belowFoots.Y >= 1)
+            //        belowFoots = belowFoots.Move(Direction.Down);
+            //    location = Movement.Move2Steps(location, belowFoots, ref motionY, true).Dequeue();
+            //}
+            //else if (!world.GetBlock(onFoots).Type.IsSolid())
+            //{
+            //    location = Movement.Move2Steps(location, onFoots, ref motionY, false).Dequeue();
+            //    motionY = 0;
+            //}
+        }
+
+
+        private void HandleGravity()
+        {
+
+            if (Movement.IsOnGround(world, location))
             {
-                location = Movement.Move2Steps(location, onFoots, ref motionY, false).Dequeue();
                 motionY = 0;
             }
+            else
+            {
+                motionY -= 0.08D;
+                motionY *= 0.9800000190734863D;
+            }
+
+
         }
 
         public void UpdateLocation(Location location, bool relative)

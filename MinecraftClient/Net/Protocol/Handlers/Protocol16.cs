@@ -735,5 +735,10 @@ namespace MinecraftClient.Protocol.Handlers
             }
             catch { return false; }
         }
+
+        void IMinecraftCom.Update()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

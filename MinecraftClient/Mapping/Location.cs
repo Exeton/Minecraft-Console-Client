@@ -127,7 +127,7 @@ namespace MinecraftClient.Mapping
             }
         }
 
-        public Location Move(Direction direction, int length = 1)
+        public Location Move(Direction direction, double length = 1)
         {
             return this + direction.ToVector() * length;
         }

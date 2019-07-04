@@ -21,6 +21,10 @@ namespace MinecraftClient.Net
         private ProxyClientFactory proxyClientFactory;
         public IMinecraftCom communicationHandler;
 
+        public void Update()
+        {
+            communicationHandler.Update();
+        }
         public bool Connect(ServerConnectionInfo serverInfo, Player player, int protocolVersion, ForgeInfo forgeInfo, IMinecraftComHandler minecraftComHandler)
         {
 
@@ -80,7 +84,6 @@ namespace MinecraftClient.Net
             if (client != null)
                 client.Close();
         }
-
 
         public void RegisterPluginChannel(string channel, ChatBot bot)
         {

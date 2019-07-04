@@ -85,5 +85,7 @@ namespace MinecraftClient.Protocol
         /// <param name="data">packet Data</param>
         /// <returns>True if message was successfully sent</returns>
         bool SendPluginChannelPacket(string channel, byte[] data);
+
+        void Update();
     }
 }

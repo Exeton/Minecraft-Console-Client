@@ -31,7 +31,6 @@ namespace MinecraftClient
         private int port;
         private string sessionid;
 
-
         PacketClient packetClient;
 
 
@@ -143,6 +142,7 @@ namespace MinecraftClient
         //Ticks 20 times per second
         public void OnUpdate()
         {
+            packetClient.Update();
             player.OnUpdate();
         }
 

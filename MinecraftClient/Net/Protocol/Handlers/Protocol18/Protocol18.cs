@@ -39,11 +39,11 @@ namespace MinecraftClient.Protocol.Handlers
         IMinecraftComHandler handler;
         public ConnectionInfo connectionInfo;
         DataTypes dataTypes;
-        Thread netRead;
         Player player;
 
         IPacketReadWriter packetReadWriter;
         IPacketHandler packetHandler;
+        bool readNet = false;
 
         public Protocol18Handler(TcpClient Client, int protocolVersion, IMinecraftComHandler handler, ForgeInfo forgeInfo, Player player)
         {
@@ -86,30 +86,11 @@ namespace MinecraftClient.Protocol.Handlers
             pForge.packetReadWriter = packetReadWriter;
         }
 
-        /// <summary>
-        /// Separate thread. Network reading loop.
-        /// </summary>
-        private void Updater()
+        public void Update()
         {
-            try
-            {
-                do
-                {
-                    Thread.Sleep(100);
-                }
-                while (Update());
-            }
-            catch (System.IO.IOException) { }
-            catch (SocketException) { }
-            catch (ObjectDisposedException) { }
+            if (!readNet || !connectionInfo.socketWrapper.IsConnected())
+                return;
 
-            handler.OnConnectionLost(ChatBot.DisconnectReason.ConnectionLost, "");
-        }
-
-        private bool Update()
-        {
-            if (!connectionInfo.socketWrapper.IsConnected())
-                return false;
             try
             {
                 while (connectionInfo.socketWrapper.HasDataAvailable())
@@ -118,9 +99,11 @@ namespace MinecraftClient.Protocol.Handlers
                     HandlePacket(packet);
                 }
             }
-            catch (SocketException) { return false; }
-            catch (NullReferenceException) { return false; }
-            return true;
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                readNet = false;   
+            }
         }
 
         /// <summary>
@@ -164,29 +147,11 @@ namespace MinecraftClient.Protocol.Handlers
         }
 
         /// <summary>
-        /// Start the updating thread. Should be called after login success.
-        /// </summary>
-        private void StartUpdating()
-        {
-            netRead = new Thread(new ThreadStart(Updater));
-            netRead.Name = "ProtocolPacketHandler";
-            netRead.Start();
-        }
-
-        /// <summary>
         /// Disconnect from the server, cancel network reading.
         /// </summary>
         public void Dispose()
         {
-            try
-            {
-                if (netRead != null)
-                {
-                    netRead.Abort();
-                    connectionInfo.socketWrapper.Disconnect();
-                }
-            }
-            catch { }
+            connectionInfo.socketWrapper.Disconnect();
         }
 
 
@@ -231,7 +196,8 @@ namespace MinecraftClient.Protocol.Handlers
                     if (!pForge.CompleteForgeHandshake())
                         return false;
 
-                    StartUpdating();
+                    readNet = true;
+                    //StartUpdating();
                     return true; //No need to check session or start encryption
                 }
                 else HandlePacket(packet);
@@ -286,7 +252,8 @@ namespace MinecraftClient.Protocol.Handlers
                     if (!pForge.CompleteForgeHandshake())
                         return false;
 
-                    StartUpdating();
+                    readNet = true;
+                    //StartUpdating();
                     return true;
                 }
                 else HandlePacket(packet);
