@@ -8,9 +8,9 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 {
     class CloseWindowHandler : IPacketHandler
     {
-        IPlayer player;
+        IPlayerModel player;
         DataTypes dataTypes;
-        public CloseWindowHandler(DataTypes dataTypes, IPlayer player)
+        public CloseWindowHandler(DataTypes dataTypes, IPlayerModel player)
         {
             this.dataTypes = dataTypes;
             this.player = player;

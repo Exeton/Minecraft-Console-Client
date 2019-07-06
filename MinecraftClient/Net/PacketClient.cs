@@ -85,40 +85,10 @@ namespace MinecraftClient.Net
                 client.Close();
         }
 
-        public void RegisterPluginChannel(string channel, ChatBot bot)
-        {
-            if (registeredBotPluginChannels.ContainsKey(channel))
-            {
-                registeredBotPluginChannels[channel].Add(bot);
-            }
-            else
-            {
-                List<ChatBot> bots = new List<ChatBot>();
-                bots.Add(bot);
-                registeredBotPluginChannels[channel] = bots;
-                SendPluginChannelMessage("REGISTER", Encoding.UTF8.GetBytes(channel), true);
-            }
-        }
-
-        public void UnregisterPluginChannel(string channel, ChatBot bot)
-        {
-            if (registeredBotPluginChannels.ContainsKey(channel))
-            {
-                List<ChatBot> registeredBots = registeredBotPluginChannels[channel];
-                registeredBots.RemoveAll(item => object.ReferenceEquals(item, bot));
-                if (registeredBots.Count == 0)
-                {
-                    registeredBotPluginChannels.Remove(channel);
-                    SendPluginChannelMessage("UNREGISTER", Encoding.UTF8.GetBytes(channel), true);
-                }
-            }
-        }
 
 
 
-        //Plugin channels must be refactored out of this class
 
-        private readonly Dictionary<string, List<ChatBot>> registeredBotPluginChannels = new Dictionary<string, List<ChatBot>>();
         private readonly List<string> registeredServerPluginChannels = new List<String>();
         /// <summary>
         /// Sends a plugin channel packet to the server.  See http://wiki.vg/Plugin_channel for more information
@@ -128,10 +98,6 @@ namespace MinecraftClient.Net
         {
             if (!sendEvenIfNotRegistered)
             {
-                if (!registeredBotPluginChannels.ContainsKey(channel))
-                {
-                    return false;
-                }
                 if (!registeredServerPluginChannels.Contains(channel))
                 {
                     return false;
@@ -159,14 +125,6 @@ namespace MinecraftClient.Net
                 foreach (string chan in channels)
                 {
                     registeredServerPluginChannels.Remove(chan);
-                }
-            }
-
-            if (registeredBotPluginChannels.ContainsKey(channel))
-            {
-                foreach (ChatBot bot in registeredBotPluginChannels[channel])
-                {
-                    bot.OnPluginMessage(channel, data);
                 }
             }
         }

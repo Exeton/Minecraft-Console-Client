@@ -5,6 +5,7 @@ using System.Text;
 using MinecraftClient.Protocol.Handlers.Forge;
 using System.Threading;
 using MinecraftClient.Protocol.Handlers.Protocol18;
+using MinecraftClient.MVVM.Client;
 
 namespace MinecraftClient.Protocol.Handlers
 {
@@ -65,7 +66,7 @@ namespace MinecraftClient.Protocol.Handlers
 
                     if (packet.id == 0x40) // Disconnect
                     {
-                        mcHandler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
+                        mcHandler.OnConnectionLost(DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
                         return false;
                     }
                     else

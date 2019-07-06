@@ -12,6 +12,7 @@ using MinecraftClient.Mapping.BlockPalettes;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Protocol.Handlers.Protocol18;
 using MinecraftClient.Data;
+using MinecraftClient.MVVM.Client;
 
 namespace MinecraftClient.Protocol.Handlers
 {
@@ -178,7 +179,7 @@ namespace MinecraftClient.Protocol.Handlers
                 Packet packet = packetReadWriter.ReadNext();
                 if (packet.id == 0x00) //Login rejected
                 {
-                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
+                    handler.OnConnectionLost(DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
                     return false;
                 }
                 else if (packet.id == 0x01) //Encryption request
@@ -221,7 +222,7 @@ namespace MinecraftClient.Protocol.Handlers
                 Console.WriteLine("Checking Session...");
                 if (!ProtocolHandler.SessionCheck(uuid, sessionID, CryptoHandler.getServerHash(serverIDhash, serverKey, secretKey)))
                 {
-                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, "Failed to check session.");
+                    handler.OnConnectionLost(DisconnectReason.LoginRejected, "Failed to check session.");
                     return false;
                 }
             }
@@ -242,7 +243,7 @@ namespace MinecraftClient.Protocol.Handlers
                 Packet packet = packetReadWriter.ReadNext();
                 if (packet.id == 0x00) //Login rejected
                 {
-                    handler.OnConnectionLost(ChatBot.DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
+                    handler.OnConnectionLost(DisconnectReason.LoginRejected, ChatParser.ParseText(dataTypes.ReadNextString(packet.data)));
                     return false;
                 }
                 else if (packet.id == 0x02) //Login successful

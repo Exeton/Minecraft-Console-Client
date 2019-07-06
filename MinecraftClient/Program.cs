@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MinecraftClient.Protocol;
 using System.Reflection;
 using System.Threading;
-using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Protocol.Session;
 using MinecraftClient.WinAPI;
 using MinecraftClient.Commands;
 using MinecraftClient.API;
 using System.IO;
-using static MinecraftClient.ChatBot;
 using MinecraftClient.SingleLogin;
 using MinecraftClient.Client;
 
@@ -86,6 +83,11 @@ namespace MinecraftClient
 
             ClientPool = new ClientPool();
             ClientPool.createClient().InitializeClient(usr, pass);
+            for (int i = 0; i < 8; i++)
+            {
+                ClientPool.createClient().InitializeClient(usr + i.ToString(), pass);
+            }
+
             //ClientPool.createClient().InitializeClient(usr + "1", pass);
 
             tickUpdater.addClientPool(ClientPool);

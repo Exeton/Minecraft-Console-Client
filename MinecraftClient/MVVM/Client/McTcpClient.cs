@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Net.Sockets;
 using System.Threading;
-using System.IO;
 using MinecraftClient.Protocol;
-using MinecraftClient.Proxy;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Mapping;
-using MinecraftClient.Commands;
 using MinecraftClient.Data;
-using MinecraftClient.API;
 using MinecraftClient.Net;
 using MinecraftClient.View;
-using System.Diagnostics;
+using MinecraftClient.MVVM.Client;
 
 namespace MinecraftClient
 {
@@ -32,7 +27,6 @@ namespace MinecraftClient
         private string sessionid;
 
         PacketClient packetClient;
-
 
         public int GetServerPort() { return port; }
         public string GetServerHost() { return host; }
@@ -111,7 +105,7 @@ namespace MinecraftClient
                 foreach (string link in links)
                     ConsoleIO.WriteLineFormatted("§8MCC: Link: " + link, false);
         }
-        public void OnConnectionLost(ChatBot.DisconnectReason reason, string message)
+        public void OnConnectionLost(DisconnectReason reason, string message)
         {
             world.Clear();
 
@@ -119,17 +113,17 @@ namespace MinecraftClient
 
             switch (reason)
             {
-                case ChatBot.DisconnectReason.ConnectionLost:
+                case DisconnectReason.ConnectionLost:
                     message = "Connection has been lost.";
                     ConsoleIO.WriteLine(message);
                     break;
 
-                case ChatBot.DisconnectReason.InGameKick:
+                case DisconnectReason.InGameKick:
                     ConsoleIO.WriteLine("Disconnected by Server :");
                     ConsoleIO.WriteLineFormatted(message);
                     break;
 
-                case ChatBot.DisconnectReason.LoginRejected:
+                case DisconnectReason.LoginRejected:
                     ConsoleIO.WriteLine("Login failed :");
                     ConsoleIO.WriteLineFormatted(message);
                     break;
@@ -180,8 +174,6 @@ namespace MinecraftClient
         public void OnPlayerJoin(Guid uuid, string name)
         {
             //Ignore placeholders eg 0000tab# from TabListPlus
-            if (!ChatBot.IsValidName(name))
-                return;
 
             lock (onlinePlayers)
             {
@@ -221,16 +213,6 @@ namespace MinecraftClient
                 }
             }
             return uuid2Player;
-        }
-
-        public void RegisterPluginChannel(string channel, ChatBot bot)
-        {
-            packetClient.RegisterPluginChannel(channel, bot);
-        }
-
-        public void UnregisterPluginChannel(string channel, ChatBot bot)
-        {
-            packetClient.UnregisterPluginChannel(channel, bot);
         }
 
         public bool SendPluginChannelMessage(string channel, byte[] data, bool sendEvenIfNotRegistered = false)

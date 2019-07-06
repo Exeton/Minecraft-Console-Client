@@ -1,4 +1,5 @@
 ﻿using MinecraftClient.API;
+using MinecraftClient.MVVM.Client;
 using MinecraftClient.Protocol;
 using MinecraftClient.Protocol.Handlers.Forge;
 using MinecraftClient.Protocol.Session;
@@ -9,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using static MinecraftClient.ChatBot;
 
 namespace MinecraftClient.Client
 {
@@ -195,7 +195,7 @@ namespace MinecraftClient.Client
                     + '\n' + "mozroots --import --ask-remove");
                 return;
             }
-            HandleFailure(failureMessage, false, ChatBot.DisconnectReason.LoginRejected);
+            HandleFailure(failureMessage, false, DisconnectReason.LoginRejected);
 
         }
     }

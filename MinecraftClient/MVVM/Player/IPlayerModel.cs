@@ -7,10 +7,8 @@ using System.Text;
 
 namespace MinecraftClient.Data
 {
-    public interface IPlayer
+    public interface IPlayerModel
     {
-
-
         string GetUsername();
         string GetUserUUID();
 

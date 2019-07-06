@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftClient.MVVM.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ namespace MinecraftClient.Protocol.Handlers.Protocol18.Handlers
 
         public bool HandlePacket(PacketIncomingType packetType, List<byte> packetData)
         {
-            handler.OnConnectionLost(ChatBot.DisconnectReason.InGameKick, ChatParser.ParseText(dataTypes.ReadNextString(packetData)));
+            handler.OnConnectionLost(DisconnectReason.InGameKick, ChatParser.ParseText(dataTypes.ReadNextString(packetData)));
             return false;
         }
     }

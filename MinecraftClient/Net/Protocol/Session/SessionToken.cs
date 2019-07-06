@@ -40,8 +40,6 @@ namespace MinecraftClient.Protocol.Session
             Guid temp;
             if (!Guid.TryParseExact(session.ID, "N", out temp))
                 throw new InvalidDataException("Invalid session ID");
-            if (!ChatBot.IsValidName(session.PlayerName))
-                throw new InvalidDataException("Invalid player name");
             if (!Guid.TryParseExact(session.PlayerID, "N", out temp))
                 throw new InvalidDataException("Invalid player ID");
             if (!Guid.TryParseExact(session.ClientID, "N", out temp))

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MinecraftClient.Mapping;
+using MinecraftClient.MVVM.Client;
 
 namespace MinecraftClient.Protocol
 {
@@ -57,27 +58,13 @@ namespace MinecraftClient.Protocol
         /// <summary>
         /// This method is called when the connection has been lost
         /// </summary>
-        void OnConnectionLost(ChatBot.DisconnectReason reason, string message);
+        void OnConnectionLost(DisconnectReason reason, string message);
 
         /// <summary>
         /// Called ~10 times per second (10 ticks per second)
         /// Useful for updating bots in other parts of the program
         /// </summary>
         void OnUpdate();
-
-        /// <summary>
-        /// Registers the given plugin channel for the given bot.
-        /// </summary>
-        /// <param name="channel">The channel to register.</param>
-        /// <param name="bot">The bot to register the channel for.</param>
-        void RegisterPluginChannel(string channel, ChatBot bot);
-
-        /// <summary>
-        /// Unregisters the given plugin channel for the given bot.
-        /// </summary>
-        /// <param name="channel">The channel to unregister.</param>
-        /// <param name="bot">The bot to unregister the channel for.</param>
-        void UnregisterPluginChannel(string channel, ChatBot bot);
 
         /// <summary>
         /// Sends a plugin channel packet to the server.

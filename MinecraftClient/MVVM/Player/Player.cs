@@ -8,7 +8,7 @@ using System.Text;
 
 namespace MinecraftClient.Data
 {
-    public class Player : IPlayer
+    public class Player : IPlayerModel
     {
         public int dimension;
         public object locationLock = new object();

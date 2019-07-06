@@ -56,35 +56,20 @@ namespace MinecraftClient.Mapping
             if (stepsByBlock <= 0)
                 stepsByBlock = 1;
 
-            if (falling)
-            {
-                //Use MC-Like falling algorithm
-                double Y = start.Y;
-                double motionPrev = motionY;
-                motionY -= 0.08D;
-                motionY *= 0.9800000190734863D;
-                Y += motionY;
-                if (Y < goal.Y)
-                    return new Queue<Location>(new[] { goal });
-                else return new Queue<Location>(new[] { new Location(start.X, Y, start.Z) });
-            }
-            else
-            {
-                //Regular MCC moving algorithm
-                motionY = 0; //Reset motion speed
-                double totalStepsDouble = start.Distance(goal) * stepsByBlock;
-                int totalSteps = (int)Math.Ceiling(totalStepsDouble);
-                Location step = (goal - start) / totalSteps;
+            //Regular MCC moving algorithm
+            motionY = 0; //Reset motion speed
+            double totalStepsDouble = start.Distance(goal) * stepsByBlock;
+            int totalSteps = (int)Math.Ceiling(totalStepsDouble);
+            Location step = (goal - start) / totalSteps;
 
-                if (totalStepsDouble >= 1)
-                {
-                    Queue<Location> movementSteps = new Queue<Location>();
-                    for (int i = 1; i <= totalSteps; i++)
-                        movementSteps.Enqueue(start + step * i);
-                    return movementSteps;
-                }
-                else return new Queue<Location>(new[] { goal });
+            if (totalStepsDouble >= 1)
+            {
+                Queue<Location> movementSteps = new Queue<Location>();
+                for (int i = 1; i <= totalSteps; i++)
+                    movementSteps.Enqueue(start + step * i);
+                return movementSteps;
             }
+            else return new Queue<Location>(new[] { goal });            
         }
 
         /// <summary>
@@ -94,8 +79,6 @@ namespace MinecraftClient.Mapping
         /// Based on the A* pathfinding algorithm described on Wikipedia
         /// </remarks>
         /// <see href="https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode"/>
-        /// <param name="start">Start location</param>
-        /// <param name="goal">Destination location</param>
         /// <param name="allowUnsafe">Allow possible but unsafe locations</param>
         /// <returns>A list of locations, or null if calculation failed</returns>
         public static Queue<Location> CalculatePath(World world, Location start, Location goal, bool allowUnsafe = false)
@@ -172,8 +155,6 @@ namespace MinecraftClient.Mapping
         /// <summary>
         /// Check if the specified location implies swimming
         /// </summary>
-        /// <param name="world">World for performing check</param>
-        /// <param name="location">Location to check</param>
         /// <returns>True if the specified location implies swimming</returns>
         public static bool IsSwimming(World world, Location location)
         {
