@@ -79,6 +79,7 @@
     <Compile Include="MVVM\Client\Client.cs" />
     <Compile Include="MVVM\Client\ClientPool.cs" />
     <Compile Include="MVVM\Client\DisconnectReason.cs" />
+    <Compile Include="MVVM\Client\Session\SessionVerifier.cs" />
     <Compile Include="MVVM\Client\TickUpdater.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandHandler.cs" />

@@ -82,10 +82,11 @@ namespace MinecraftClient
             TickUpdater tickUpdater = new TickUpdater();
 
             ClientPool = new ClientPool();
-            ClientPool.createClient().InitializeClient(usr, pass);
+
+            ClientPool.CreateAndConnectClient(usr, pass);
             for (int i = 0; i < 8; i++)
             {
-                ClientPool.createClient().InitializeClient(usr + i.ToString(), pass);
+                //ClientPool.CreateAndConnectClient(usr + i.ToString(), pass);
             }
 
             //ClientPool.createClient().InitializeClient(usr + "1", pass);

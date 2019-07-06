@@ -10,6 +10,7 @@ using MinecraftClient.Data;
 using MinecraftClient.Net;
 using MinecraftClient.View;
 using MinecraftClient.MVVM.Client;
+using MinecraftClient.Protocol.Session;
 
 namespace MinecraftClient
 {
@@ -36,9 +37,47 @@ namespace MinecraftClient
 
         public IMinecraftCom handler;
 
-        public McTcpClient(string username, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo)
+
+        public McTcpClient(SessionToken session)
         {
-            StartClient(username, uuid, sessionID, protocolversion, server_ip, port, forgeInfo);
+            //Get server version
+            int protocolversion = 0;
+            ForgeInfo forgeInfo = null;
+
+            if (Settings.ServerConnectionInfo.ServerVersion != "" && Settings.ServerConnectionInfo.ServerVersion.ToLower() != "auto")
+            {
+                protocolversion = Protocol.ProtocolHandler.MCVer2ProtocolVersion(Settings.ServerConnectionInfo.ServerVersion);
+
+                if (protocolversion != 0)
+                {
+                    ConsoleIO.WriteLineFormatted("§8Using Minecraft version " + Settings.ServerConnectionInfo.ServerVersion + " (protocol v" + protocolversion + ')');
+                }
+                else ConsoleIO.WriteLineFormatted("§8Unknown or not supported MC version '" + Settings.ServerConnectionInfo.ServerVersion + "'.\nSwitching to autodetection mode.");
+            }
+
+            if (protocolversion == 0)
+            {
+                Console.WriteLine("Retrieving Server Info...");
+                if (!ProtocolHandler.GetServerInfo(Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, ref protocolversion, ref forgeInfo))
+                {
+                    //HandleFailure("Failed to ping this IP.", true, DisconnectReason.ConnectionLost);
+                    return;
+                }
+            }
+
+            if (protocolversion != 0)
+            {
+                try
+                {
+                    StartClient(session.PlayerName, session.PlayerID, session.ID, protocolversion, Settings.ServerConnectionInfo.ServerIP, Settings.ServerConnectionInfo.ServerPort, forgeInfo);
+
+                    //Update console title
+                    if (Settings.ConsoleTitle != "")
+                        Console.Title = Settings.ExpandVars(Settings.ConsoleTitle);
+                }
+                catch (NotSupportedException) {/* HandleFailure("Cannot connect to the server : This version is not supported !", true); */ }
+            }
+            //else HandleFailure("Failed to determine server version.", true);
         }
 
         private void StartClient(string user, string uuid, string sessionID, int protocolversion, string server_ip, ushort port, ForgeInfo forgeInfo)
@@ -63,9 +102,9 @@ namespace MinecraftClient
             {
                 ConsoleIO.WriteLineFormatted("§8" + e.Message);
                 Console.WriteLine("Failed to connect to this IP.");
-                Client.Client.HandleFailure();
             }
         }
+
         public void OnGameJoined()
         {
             if (!String.IsNullOrWhiteSpace(Settings.BrandInfo))
@@ -128,9 +167,6 @@ namespace MinecraftClient
                     ConsoleIO.WriteLineFormatted(message);
                     break;
             }
-
-            if (!will_restart)
-                Client.Client.HandleFailure();
         }
 
         //Ticks 20 times per second

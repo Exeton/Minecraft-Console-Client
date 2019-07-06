@@ -59,10 +59,8 @@ namespace MinecraftClient.Net
             {
                 ConsoleIO.WriteLineFormatted("§8" + e.Message);
                 Console.WriteLine("Failed to join this server.");
-                Client.Client.HandleFailure();
                 return false;
             }
-
         }
 
         public void Disconnect()
@@ -84,10 +82,6 @@ namespace MinecraftClient.Net
             if (client != null)
                 client.Close();
         }
-
-
-
-
 
         private readonly List<string> registeredServerPluginChannels = new List<String>();
         /// <summary>

@@ -1,4 +1,7 @@
 ﻿using MinecraftClient.Mapping;
+using MinecraftClient.MVVM.Client.Session;
+using MinecraftClient.Protocol;
+using MinecraftClient.Protocol.Session;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,16 +13,25 @@ namespace MinecraftClient.Client
     public class ClientPool
     {
 
-        World world;
-        public List<Client> clients = new List<Client>();
+        List<McTcpClient> mcTcpClients = new List<McTcpClient>();
 
-        public Client createClient()
+        public void CreateAndConnectClient(string usr, string pass)
         {
+            SessionToken session;
+            ProtocolHandler.LoginResult loginResult = SessionVerifier.tryAuthenticateSession(out session, usr, pass);
 
-            Client client = new Client();
-            clients.Add(client);
+            if (loginResult == ProtocolHandler.LoginResult.Success)
+                mcTcpClients.Add(new McTcpClient(session));
+            else
+                SessionVerifier.handleLoginFailure(loginResult);
+        }
+
+        public void Update()
+        {
+            foreach (McTcpClient mcTcpClient in mcTcpClients)           
+                if (mcTcpClient != null)
+                    mcTcpClient.OnUpdate();
             
-            return client;
         }
 
     }

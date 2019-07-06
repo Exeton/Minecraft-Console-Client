@@ -38,9 +38,7 @@ namespace MinecraftClient.Client
         private void UpdateClients()
         {
             foreach (ClientPool clientPool in clientPools)
-                foreach (Client client in clientPool.clients)
-                    if (client.mcTcpClient != null)
-                        client.mcTcpClient.OnUpdate();
+                clientPool.Update();
         }
 
         private void UpdatePlugins()
